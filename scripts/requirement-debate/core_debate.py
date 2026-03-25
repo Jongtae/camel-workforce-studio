@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""코어 플랫폼 개발 Workforce 실행기."""
+"""Development 팀 Workforce 실행기."""
 
 import sys
 

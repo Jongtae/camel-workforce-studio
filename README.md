@@ -2,14 +2,14 @@
 
 `camel-workforce-studio`는 범용 CAMEL 데모 레포가 아니라, [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision workspace입니다. 이 저장소는 제품 본체를 구현하는 대신, GitHub issue, 외부 리포트, progress log, 이전 논의 결과를 정규화해서 여러 workforce 토론으로 넘기고, 그 결과를 다시 다음 논의나 GitHub handoff로 연결하는 역할을 맡습니다.
 
-핵심 흐름은 `Context Builder -> Commitment/Core/Operator/Society Workforce -> Handoff`입니다. 즉 topic 하나만 던지는 토론기보다, “지금 무엇이 막혀 있고 다음에 어느 workforce가 무엇을 결정해야 하는가”를 구조적으로 다루는 companion repo에 가깝습니다.
+핵심 흐름은 `Context Builder -> Commitment/Development/Operator/Society Workforce -> Handoff`입니다. 즉 topic 하나만 던지는 토론기보다, “지금 무엇이 막혀 있고 다음에 어느 workforce가 무엇을 결정해야 하는가”를 구조적으로 다루는 companion repo에 가깝습니다.
 
 ## Workforce Model
 
 - `commitment`: 현재 상태의 gap을 읽고 다음 workforce와 topic을 결정합니다.
-- `core`: AI-Fashion-Forum mock을 실제 서비스로 전환하는 코어 구현 논의를 맡습니다.
-- `operator`: 운영 조직의 관찰 프레임, 메트릭, 개입 레버를 설계합니다.
-- `society`: 이용자 조직의 사회 규칙, 상태, 기억, 관계 모델을 설계합니다.
+- `core`: 내부 키는 `core`지만, 사용자-facing으로는 AI-Fashion-Forum을 실제 서비스로 전환하는 `development` 팀입니다.
+- `operator`: 포럼 운영자로서 컨텐츠 자정, 모니터링, 기능 개선사항 도출을 담당합니다.
+- `society`: API 기반 forum 위에서 action하는 stateful AI agent의 상태, 기억, characteristic, 내부/외부 콘텐츠 소비 규칙을 설계합니다.
 - `default`: 어느 특화 workforce에도 바로 맞지 않는 환경 설계를 다룹니다.
 
 ## Operating Flow

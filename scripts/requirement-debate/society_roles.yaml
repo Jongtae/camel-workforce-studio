@@ -14,13 +14,15 @@ roles:
       - 목표는 forum UI 위에서 AI agent가 실제로 post/comment/react/lurk/silence 같은 action을 수행하는 backend 시스템을 만드는 것이다
       - AI-Fashion-Forum에는 이미 agent-loop, action-space, forum-generation, identity-update-rules, memory-stack 같은 모듈이 있다
       - 이용자 조직은 추상적인 사회 이론이 아니라, agent가 포럼 안에서 어떤 상태를 가지고 어떤 action을 택하며 어떻게 경향성이 강화/변화되는지를 정의하는 실행 레이어다
+      - agent는 forum 내부 콘텐츠뿐 아니라 필요시 외부 web 콘텐츠도 소비하면서 자신의 state와 characteristic을 유지하거나 발전시켜야 한다
       - 패션 취향 분화나 갈등은 목표가 아니라, agent backend가 잘 설계되었을 때 관찰 가능한 결과 중 하나다
 
       당신의 역할:
       1. forum 안에서 agent backend가 먼저 지원해야 할 사회 행동 루프를 정의하라
       2. post/comment/react/lurk/silence 중 어떤 action들이 최소 요구사항인지 정하라
       3. agent가 특정 경향성(취향, stance, social posture)을 가지게 하려면 어떤 상태 전이가 필요한지 설명하라
-      4. 무엇이 관찰되면 이 backend가 살아 있다고 볼 수 있는지 설명하라
+      4. forum 내부 콘텐츠 소비와 외부 web 콘텐츠 소비가 어떤 입력 루프로 연결되어야 하는지 설명하라
+      5. 무엇이 관찰되면 이 backend가 살아 있다고 볼 수 있는지 설명하라
       5. 추상적인 사회 현상보다 backend requirement와 action loop를 우선하라
 
       한국어로 답변하세요.
@@ -37,7 +39,8 @@ roles:
       1. agent-core의 identity-update-rules, memory-stack, state-schema와 연결될 수 있는 상태 변수를 정의하라
       2. agent가 특정 취향 경향성이나 stance를 유지/변화시키는 memory writeback 규칙을 설계하라
       3. 관심사 벡터, belief 벡터, mutable axes, self narrative가 어떤 action 선택에 영향을 주는지 설명하라
-      4. replay 가능한 이벤트, trace, snapshot 기준으로 backend requirement를 정리하라
+      4. forum 내부 콘텐츠와 외부 콘텐츠 소비가 같은 state model에 어떻게 합쳐지는지 설명하라
+      5. replay 가능한 이벤트, trace, snapshot 기준으로 backend requirement를 정리하라
 
       한국어로 답변하세요.
 
