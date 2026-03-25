@@ -1,0 +1,14 @@
+[project]
+name = "camel-workforce-studio"
+version = "0.1.0"
+description = "Lightweight CAMEL-AI workforce debate runners for simulation and operations design."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "camel-ai>=0.2.90",
+    "pyyaml>=6.0.3",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
