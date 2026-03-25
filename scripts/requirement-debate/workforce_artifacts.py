@@ -1,0 +1,294 @@
+#!/usr/bin/env python3
+"""Workforce handoff parsing and artifact storage helpers."""
+
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+
+WORKFORCE_KEYS = {"commitment", "core", "operator", "society", "default"}
+SECTION_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.M)
+
+
+@dataclass
+class ArtifactBundle:
+    run_dir: Path
+    full_report: Path
+    decision: Path
+    round_summary: Path
+    next_questions: Path
+    handoff: Path
+    metadata: Path
+
+
+def slugify(value: str, fallback: str = "run") -> str:
+    text = re.sub(r"\s+", "_", value.strip())
+    text = re.sub(r"[^0-9A-Za-z._-]+", "-", text)
+    text = text.strip("._-")
+    return (text[:80] or fallback).lower()
+
+
+def markdown_sections(text: str) -> dict[str, str]:
+    matches = list(SECTION_RE.finditer(text))
+    if not matches:
+        return {}
+
+    sections: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        title = match.group(2).strip()
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        sections[title] = text[start:end].strip()
+    return sections
+
+
+def first_section(text: str, *names: str) -> str:
+    sections = markdown_sections(text)
+    for name in names:
+        for key, value in sections.items():
+            if key.lower() == name.lower():
+                return value.strip()
+    return ""
+
+
+def bullet_lines(text: str) -> list[str]:
+    lines = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("- "):
+            lines.append(line[2:].strip())
+        elif re.match(r"^\d+\.\s+", line):
+            lines.append(re.sub(r"^\d+\.\s+", "", line).strip())
+        elif line.startswith("[ ] "):
+            lines.append(line[4:].strip())
+        else:
+            lines.append(line)
+    return lines
+
+
+def parse_commitment_decision(text: str) -> tuple[str, str]:
+    selected_workforce = first_section(text, "Selected Workforce").splitlines()
+    next_topic = first_section(text, "Topic").splitlines()
+    workforce = selected_workforce[0].strip() if selected_workforce else ""
+    topic = next_topic[0].strip() if next_topic else ""
+    if workforce not in WORKFORCE_KEYS:
+        workforce = ""
+    return workforce, topic
+
+
+def build_handoff_markdown(
+    source_workforce: str,
+    source_label: str,
+    topic: str,
+    decision_text: str,
+    target_workforce: str = "",
+    next_topic: str = "",
+) -> str:
+    decisions = first_section(
+        decision_text,
+        "Key Decisions",
+        "Required Decisions",
+        "Environment Priorities",
+        "Summary",
+    )
+    open_questions = first_section(
+        decision_text,
+        "Open Questions",
+        "Remaining Tensions",
+        "Risks",
+    )
+    why_this_handoff = "\n\n".join(
+        filter(
+            None,
+            [
+                first_section(decision_text, "Why This Workforce"),
+                first_section(decision_text, "Why This Topic"),
+                first_section(decision_text, "Summary"),
+            ],
+        )
+    ).strip()
+
+    if source_workforce == "commitment":
+        parsed_target, parsed_topic = parse_commitment_decision(decision_text)
+        target_workforce = target_workforce or parsed_target
+        next_topic = next_topic or parsed_topic
+
+    if not why_this_handoff:
+        why_this_handoff = (
+            "이번 workforce 결과를 다음 workforce가 이어받아 추가 결정을 내릴 수 있도록 "
+            "핵심 판단과 제약을 정리한다."
+        )
+
+    decision_items = bullet_lines(decisions)
+    question_items = bullet_lines(open_questions)
+
+    lines = [
+        "# Workforce Handoff",
+        "",
+        "## Source Workforce",
+        source_workforce,
+        "",
+        "## Source Label",
+        source_label,
+        "",
+        "## Source Topic",
+        topic,
+        "",
+        "## Target Workforce",
+        target_workforce or "TBD",
+        "",
+        "## Next Topic",
+        next_topic or "TBD",
+        "",
+        "## Why This Handoff",
+        why_this_handoff,
+        "",
+        "## Decisions Already Fixed",
+    ]
+
+    if decision_items:
+        lines.extend([f"- {item}" for item in decision_items])
+    else:
+        lines.append("- Final synthesis에서 구조화된 결정 항목을 찾지 못했다.")
+
+    lines.extend(
+        [
+            "",
+            "## Open Questions For Target Workforce",
+        ]
+    )
+    if question_items:
+        lines.extend([f"- {item}" for item in question_items])
+    else:
+        lines.append("- 다음 workforce가 이어서 구체화할 질문을 추가 정리해야 한다.")
+
+    lines.extend(
+        [
+            "",
+            "## Constraints",
+            "- 이전 workforce에서 확정된 결정은 불필요하게 다시 논쟁하지 않는다.",
+            "- 다음 workforce는 자신의 전문 레이어에 맞는 결정을 우선한다.",
+            "",
+            "## Relevant Evidence",
+            "- 상세 근거는 같은 실행 디렉터리의 `decision.md`와 `full_report.md`를 참고한다.",
+            "",
+            "## Do Not Re-litigate",
+            "- 이미 확정된 source workforce의 핵심 결정을 무시한 채 처음부터 다시 토론하지 않는다.",
+        ]
+    )
+    return "\n".join(lines).strip() + "\n"
+
+
+def write_run_artifacts(
+    output_dir: Path,
+    workforce_key: str,
+    scenario_label: str,
+    topic: str,
+    rounds: int,
+    participants: str,
+    full_report_text: str,
+    final_result_text: str,
+    round_results: list[dict[str, str]],
+    handoff_text: str,
+    target_workforce: str = "",
+    next_topic: str = "",
+) -> ArtifactBundle:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_dir = output_dir / f"{timestamp}_{workforce_key}_{slugify(topic, workforce_key)}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    full_report = run_dir / "full_report.md"
+    decision = run_dir / "decision.md"
+    round_summary = run_dir / "round_summary.md"
+    next_questions = run_dir / "next_questions.md"
+    handoff = run_dir / "handoff.md"
+    metadata = run_dir / "metadata.json"
+
+    full_report.write_text(full_report_text, encoding="utf-8")
+    decision.write_text(final_result_text.strip() + "\n", encoding="utf-8")
+
+    round_summary_lines = [
+        "# Round Summary",
+        "",
+        f"- Workforce: {workforce_key}",
+        f"- Topic: {topic}",
+        f"- Rounds: {rounds}",
+        f"- Participants: {participants}",
+        "",
+    ]
+    for item in round_results:
+        round_summary_lines.extend(
+            [
+                f"## Round {item['round']}",
+                "",
+                item["normalized_result"].strip(),
+                "",
+            ]
+        )
+    round_summary.write_text("\n".join(round_summary_lines).strip() + "\n", encoding="utf-8")
+
+    extracted_open_questions = first_section(
+        final_result_text,
+        "Open Questions",
+        "Remaining Tensions",
+        "Risks",
+    )
+    if not extracted_open_questions:
+        extracted_open_questions = "- 다음 workforce 또는 후속 이슈에서 추가 정리가 필요하다."
+    next_questions.write_text(
+        "# Next Questions\n\n" + extracted_open_questions.strip() + "\n",
+        encoding="utf-8",
+    )
+
+    handoff.write_text(handoff_text, encoding="utf-8")
+
+    metadata_payload = {
+        "workforce": workforce_key,
+        "label": scenario_label,
+        "topic": topic,
+        "rounds": rounds,
+        "participants": participants,
+        "target_workforce": target_workforce,
+        "next_topic": next_topic,
+        "generated_at": datetime.now().isoformat(),
+        "artifacts": {
+            "full_report": str(full_report),
+            "decision": str(decision),
+            "round_summary": str(round_summary),
+            "next_questions": str(next_questions),
+            "handoff": str(handoff),
+        },
+    }
+    metadata.write_text(
+        json.dumps(metadata_payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    return ArtifactBundle(
+        run_dir=run_dir,
+        full_report=full_report,
+        decision=decision,
+        round_summary=round_summary,
+        next_questions=next_questions,
+        handoff=handoff,
+        metadata=metadata,
+    )
+
+
+def load_handoff(path: Optional[str]) -> str:
+    if not path:
+        return ""
+    return Path(path).read_text(encoding="utf-8").strip()
+
+
+def load_context_pack(path: Optional[str]) -> str:
+    if not path:
+        return ""
+    return Path(path).read_text(encoding="utf-8").strip()

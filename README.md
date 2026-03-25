@@ -1,29 +1,56 @@
 # camel-workforce-studio
 
-CAMEL-AI Workforce 기반 토론 실행기를 분리해 둔 경량 레포입니다.
+`camel-workforce-studio`는 범용 CAMEL 데모 레포가 아니라, [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision workspace입니다. 이 저장소는 제품 본체를 구현하는 대신, GitHub issue, 외부 리포트, progress log, 이전 논의 결과를 정규화해서 여러 workforce 토론으로 넘기고, 그 결과를 다시 다음 논의나 GitHub handoff로 연결하는 역할을 맡습니다.
 
-이 레포는 제품 자체를 구현하는 곳이 아니라, 시뮬레이션/운영/코어 개발 논의를 여러 역할 에이전트로 실행하고 결과를 산출물로 남기는 companion workspace 역할을 합니다.
+핵심 흐름은 `Context Builder -> Commitment/Core/Operator/Society Workforce -> Handoff`입니다. 즉 topic 하나만 던지는 토론기보다, “지금 무엇이 막혀 있고 다음에 어느 workforce가 무엇을 결정해야 하는가”를 구조적으로 다루는 companion repo에 가깝습니다.
 
-## 현재 포함된 구성
+## Workforce Model
 
-- `scripts/requirement-debate/`
-  - `debate.py`: 메인 Workforce 실행기
-  - `society_debate.py`: 이용자 조직 시뮬레이션 토론 실행기
-  - `operator_debate.py`: 운영 조직 설계 토론 실행기
-  - `core_debate.py`: 코어 플랫폼 개발 토론 실행기
-  - `bridge_debate.py`: society 결과를 operator 토론으로 넘기는 bridge 실행기
-  - `*_roles.yaml`: 역할 정의
-  - `outputs/`: 실행 결과 저장 경로
+- `commitment`: 현재 상태의 gap을 읽고 다음 workforce와 topic을 결정합니다.
+- `core`: AI-Fashion-Forum mock을 실제 서비스로 전환하는 코어 구현 논의를 맡습니다.
+- `operator`: 운영 조직의 관찰 프레임, 메트릭, 개입 레버를 설계합니다.
+- `society`: 이용자 조직의 사회 규칙, 상태, 기억, 관계 모델을 설계합니다.
+- `default`: 어느 특화 workforce에도 바로 맞지 않는 환경 설계를 다룹니다.
 
-## 목적
+## Operating Flow
 
-- 외부 이슈나 요구사항을 Workforce 토론으로 정리한다.
-- 여러 관점의 역할을 통해 실행 가능한 설계 초안을 만든다.
-- 결과를 markdown 산출물이나 GitHub issue 초안으로 남긴다.
+1. `scripts/context-builder/build_context.py`가 GitHub issue, 외부 리포트, progress log를 읽어 `context/workflow-inputs/*.md`를 만듭니다.
+2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다.
+3. 선택된 workforce가 handoff와 context pack을 함께 읽고 토론합니다.
+4. 각 실행은 `decision.md`, `handoff.md`, `next_questions.md`, `round_summary.md`, `full_report.md`를 남깁니다.
+5. 다음 workforce 또는 GitHub issue 초안은 이 산출물을 기준으로 이어집니다.
 
-## 빠른 시작
+## Repository Layout
 
-### 1. Python 환경 준비
+```text
+scripts/
+  context-builder/
+    build_context.py
+  requirement-debate/
+    debate.py
+    commitment_debate.py
+    core_debate.py
+    operator_debate.py
+    society_debate.py
+    bridge_debate.py
+    workforce_artifacts.py
+    *_roles.yaml
+    outputs/
+
+context/
+  README.md
+  raw/
+  normalized/
+  workflow-inputs/
+
+docs/
+  workforce-handoff-contract.md
+  shared-memory-evaluation.md
+```
+
+## Quick Start
+
+### 1. Python environment
 
 ```bash
 python3 -m venv .venv
@@ -37,35 +64,56 @@ pip install -e .
 export OPENAI_API_KEY=your_key_here
 ```
 
-### 2. 기본 실행
+### 2. Build context packs
 
 ```bash
-python scripts/requirement-debate/society_debate.py
+python3 scripts/context-builder/build_context.py --repo Jongtae/AI-Fashion-Forum
 ```
 
-### 3. 운영 조직 토론 실행
+### 3. Run commitment and hand off automatically
 
 ```bash
-python scripts/requirement-debate/operator_debate.py --topic "포럼 운영 조직이 먼저 정의해야 할 관찰 프레임은 무엇인가?"
+python3 scripts/requirement-debate/commitment_debate.py \
+  --context-pack context/workflow-inputs/commitment.md \
+  --run-next
 ```
 
-### 4. 코어 개발 토론 실행
+### 4. Run a specific workforce with handoff/context
 
 ```bash
-python scripts/requirement-debate/core_debate.py --rounds 4
+python3 scripts/requirement-debate/core_debate.py \
+  --topic "현재 mock을 실제 서비스로 전환할 때 가장 먼저 구현해야 할 end-to-end 루프는 무엇인가?" \
+  --context-pack context/workflow-inputs/core.md
 ```
 
-### 5. society -> operator bridge 실행
+### 5. Bridge one workforce into another
 
 ```bash
-python scripts/requirement-debate/bridge_debate.py --society-rounds 3 --operator-rounds 3
+python3 scripts/requirement-debate/bridge_debate.py \
+  --from-workforce society \
+  --to-workforce operator \
+  --context-pack context/workflow-inputs/operator.md
 ```
 
-## 출력 위치
+## Output Contract
 
-실행 결과는 기본적으로 `scripts/requirement-debate/outputs/` 아래에 저장됩니다.
+각 workforce 실행은 `scripts/requirement-debate/outputs/<timestamp>_<workforce>_<topic-slug>/` 아래에 표준 산출물을 저장합니다.
 
-## 메모
+- `full_report.md`: 전체 라운드와 최종 합성 결과
+- `decision.md`: 최종 결정문
+- `handoff.md`: 다음 workforce로 넘길 구조화된 handoff
+- `next_questions.md`: 후속 논의 질문
+- `round_summary.md`: 라운드별 정리
+- `metadata.json`: 실행 메타데이터
 
-- 현재 코드는 AI Fashion Forum 맥락이 강하게 들어가 있습니다.
-- 이후 범용 orchestrator로 확장하려면 scenario/adapters 레이어를 분리하는 방향이 자연스럽습니다.
+세부 규약은 [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md) 에 정리되어 있습니다.
+
+## Shared Memory Policy
+
+이 저장소는 CAMEL memory보다 명시적 handoff 문서를 우선합니다. `share_memory`는 실험적으로 켤 수 있지만 기본값은 꺼져 있습니다.
+
+- 기본 진실 원천: `handoff.md`, `decision.md`, `context/workflow-inputs/*.md`
+- 선택적 런타임 보조: `--share-memory`
+- 아직 기본 채택하지 않는 이유: 장기 컨텍스트는 CAMEL 내부 memory보다 GitHub issue, reports, progress log, handoff 문서가 더 투명하고 재검토 가능하기 때문입니다.
+
+자세한 평가는 [docs/shared-memory-evaluation.md](docs/shared-memory-evaluation.md) 에 있습니다.
