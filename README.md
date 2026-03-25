@@ -46,6 +46,9 @@ context/
   workflow-inputs/
 
 docs/
+  project-history-and-playbook.md
+  ai-fashion-forum-readiness-scorecard.md
+  iteration-log.md
   workforce-handoff-contract.md
   shared-memory-evaluation.md
 ```
@@ -135,6 +138,15 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - 아직 기본 채택하지 않는 이유: 장기 컨텍스트는 CAMEL 내부 memory보다 GitHub issue, reports, progress log, handoff 문서가 더 투명하고 재검토 가능하기 때문입니다.
 
 자세한 평가는 [docs/shared-memory-evaluation.md](docs/shared-memory-evaluation.md) 에 있습니다.
+
+## Project Knowledge Base
+
+GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
+
+- [docs/project-history-and-playbook.md](docs/project-history-and-playbook.md): 왜 이 저장소를 만들었는지, 어떤 시행착오가 있었는지, 다음 사람이 어떻게 이어받아야 하는지
+- [docs/ai-fashion-forum-readiness-scorecard.md](docs/ai-fashion-forum-readiness-scorecard.md): AI-Fashion-Forum 실전 활용 가능 판정 기준
+- [docs/iteration-log.md](docs/iteration-log.md): iteration별 튜닝 기록과 점수 변화
+- [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md): workforce 간 전달 규약
 
 ## Semi-Autonomous Boundary
 
