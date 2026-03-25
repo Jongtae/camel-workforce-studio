@@ -371,27 +371,28 @@ SCENARIOS = {
     "society": {
         "label": "이용자 조직 시뮬레이션",
         "roles_file": SCRIPT_DIR / "society_roles.yaml",
-        "default_topic": "패션 커뮤니티를 도메인 언어로 쓰는 이용자 조직 시뮬레이션에서 먼저 정의해야 할 행태, 상태, 관계 규칙은 무엇인가?",
-        "workforce_description": "AI Fashion Forum 이용자 조직 시뮬레이션 토론 팀: Society Modeling Lead, Identity & Memory Architect, Community Dynamics Researcher, Simulation Critic이 협력하여 이용자 조직 환경 설계안을 도출합니다.",
+        "default_topic": "포럼 안에서 AI agent가 실제로 post/comment/react/lurk/silence를 수행하고 특정 취향 경향성을 가지게 하려면 먼저 어떤 상태, 기억, 행동 규칙을 backend에 구현해야 하는가?",
+        "workforce_description": "AI Fashion Forum 이용자 조직 시뮬레이션 토론 팀: Society Modeling Lead, Identity & Memory Architect, Community Dynamics Researcher, Simulation Critic이 협력하여 포럼 안에서 action하는 AI agent backend 요구사항을 도출합니다.",
         "participants": "Society Modeling Lead, Identity & Memory Architect, Community Dynamics Researcher, Simulation Critic",
         "title": "🏢 AI Fashion Forum — 이용자 조직 시뮬레이션 토론",
         "arg_description": "CAMEL Workforce 기반 이용자 조직 시뮬레이션 토론 엔진",
-        "build_task_prompt": lambda topic: f"""AI Fashion Forum 프로젝트의 이용자 조직 시뮬레이션 환경을 토론하세요.
+        "build_task_prompt": lambda topic: f"""AI Fashion Forum 프로젝트의 forum 안에서 action하는 AI agent backend 요구사항을 토론하세요.
 
 ## 토론 주제
 {topic}
 
 ## 프로젝트 맥락
-- 패션 커뮤니티를 도메인 언어로 사용하는 AI-native 사회 시뮬레이션 환경을 만든다
-- 이용자 조직은 포스트, 댓글, 반응, 침묵, 군집, 갈등, 지위, 정체성 변화를 만들어내는 사회 레이어다
-- 패션 취향 분화는 목표가 아니라 가능한 emergent phenomenon 중 하나다
-- 핵심은 어떤 상태, 기억, 관계, 노출, 행동 규칙이 있어야 설명 가능한 사회 동학이 반복적으로 나타나는지 정의하는 것이다
+- AI-Fashion-Forum에는 이미 sim-server의 agent-loop, agent-core의 action-space, memory-stack, identity-update-rules, forum-generation이 존재한다
+- 목표는 forum UI 위에서 AI agent가 실제로 post/comment/react/lurk/silence를 수행하는 backend 시스템을 만드는 것이다
+- agent는 특정 취향 경향성, belief, social posture를 가져야 하고, 콘텐츠 노출과 memory writeback을 통해 그 경향성이 유지되거나 바뀌어야 한다
+- 패션 취향 분화나 갈등은 목표가 아니라, 이런 backend가 잘 동작할 때 나타나는 관찰 가능한 결과다
+- 이번 토론의 핵심은 "어떤 사회 현상이 재미있는가?"가 아니라 "어떤 agent state/action backend requirement가 있어야 포럼 안에서 살아 있는 행동이 나오나?"이다
 
 ## 토론 규칙
-1. Society Modeling Lead: 먼저 검증해야 할 사회 시뮬레이션 질문을 정의하라
+1. Society Modeling Lead: agent backend가 먼저 지원해야 할 action loop를 정의하라
 2. Identity & Memory Architect: 상태, 기억, 노출, 관계, 행동 규칙을 설계하라
-3. Community Dynamics Researcher: 실제 패션 커뮤니티의 규범, 갈등, 지위 형성과의 정합성을 검증하라
-4. Simulation Critic: 설명 불가능성, 누락된 행태, 실패 시나리오를 지적하라
+3. Community Dynamics Researcher: 실제 패션 커뮤니티와 맞는 backend action/state 모델인지 검증하라
+4. Simulation Critic: 설명 불가능성, 누락된 action/state, 실패 시나리오를 지적하라
 
 ## 기대 산출물
 - Simulation Question
@@ -407,27 +408,28 @@ SCENARIOS = {
 - Priority
 
 ## 출력 제약
-- 기능 목록보다 사회 환경 규칙과 관찰 가능성을 우선하라
-- 추천 앱 MVP 논의로 축소하지 말라
-- 이용자 조직이 어떤 행동 단위와 사회 동학을 가지는지 구체적으로 적어라
+- 사회 일반론보다 agent backend requirement를 우선하라
+- post/comment/react/lurk/silence/action trace/state snapshot 같은 구체적인 backend 단위를 반드시 포함하라
+- agent의 취향 경향성, belief 변화, memory writeback이 action 선택과 어떻게 연결되는지 구체적으로 적어라
+- 단순 추천 앱 기능 논의나 커뮤니티 일반론으로 축소하지 말라
 """,
-        "coordinator_prompt": COMMON_COORDINATOR_PROMPT + "\n추가 규칙: 이번 토론은 이용자 조직 시뮬레이션 설계에 집중한다. 운영 조직의 기능 목록보다 사회 행태 모델을 우선한다.\n",
-        "final_prompt": COMMON_FINAL_SYNTHESIZER_PROMPT + "\n추가 규칙: 최종 결과는 이용자 조직의 행태 모델, 관찰 신호, 필수 시뮬레이션 아티팩트를 우선 정리하라.\n",
+        "coordinator_prompt": COMMON_COORDINATOR_PROMPT + "\n추가 규칙: 이번 토론은 forum 안에서 action하는 AI agent backend 요구사항에 집중한다. 추상적인 사회 현상보다 action loop, state schema, memory writeback, observable trace를 우선한다.\n",
+        "final_prompt": COMMON_FINAL_SYNTHESIZER_PROMPT + "\n추가 규칙: 최종 결과는 AI agent backend가 구현해야 할 action loop, state/memory requirement, observable trace, forum artifact 생성을 우선 정리하라.\n",
         "round_focus_guide": {
-            1: "이용자 조직이 어떤 사회 질문을 풀어야 하는지와 핵심 행태 단위를 정의하라.",
-            2: "상태, 기억, 관계, 노출, 행동 스키마와 관찰 신호를 구체화하라.",
-            3: "규범, 갈등, 군집, 지위 형성에서 누락된 요소와 실패 시나리오를 점검하라.",
-            4: "반복 실험에 필요한 측정 프레임, 데이터, 아티팩트를 압축하라.",
-            5: "이슈로 옮길 수 있게 이용자 조직 시뮬레이션 설계안을 정리하라.",
+            1: "agent가 forum 안에서 어떤 action loop를 가져야 하는지와 최소 backend 범위를 정의하라.",
+            2: "상태, 기억, 관계, 노출, 행동 스키마와 action 선택 규칙을 구체화하라.",
+            3: "agent의 경향성 형성, belief 변화, 실패 시나리오, 하드코딩처럼 보이는 위험을 점검하라.",
+            4: "반복 실험에 필요한 trace, snapshot, metric, artifact를 압축하라.",
+            5: "이슈로 옮길 수 있게 AI agent backend 요구사항을 정리하라.",
         },
         "synthesis_prompt": """위 결과를 바탕으로:
-1. 이용자 조직이 먼저 설명해야 할 사회 동학을 추출하고
-2. 필요한 상태, 기억, 관계, 행동 규칙을 정리하고
-3. 어떤 관찰 신호와 아티팩트가 있어야 설명 가능한지 우선순위를 정한 뒤
+1. forum 안에서 AI agent가 먼저 지원해야 할 action loop를 추출하고
+2. 필요한 상태, 기억, 관계, 행동 규칙과 경향성 형성 메커니즘을 정리하고
+3. 어떤 trace, snapshot, forum artifact가 있어야 설명 가능하고 디버깅 가능한지 우선순위를 정한 뒤
 4. 바로 GitHub Issue로 등록 가능한 실행 초안을 작성하라.
 
 Acceptance Criteria는 실제 구현/검증 가능한 체크리스트로 작성하라.
-이용자 조직의 행태 모델과 반복 실험 가능성을 우선하라.
+agent backend requirement와 반복 실험 가능성을 우선하라.
 """,
     },
     "core": {
