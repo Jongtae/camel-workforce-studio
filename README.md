@@ -36,6 +36,8 @@ scripts/
     workforce_artifacts.py
     *_roles.yaml
     outputs/
+  pipeline/
+    run_studio.py
 
 context/
   README.md
@@ -78,6 +80,22 @@ python3 scripts/requirement-debate/commitment_debate.py \
   --run-next
 ```
 
+### 3-1. Run in semi-autonomous mode
+
+```bash
+python3 scripts/pipeline/run_studio.py \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
+  --rounds 1
+```
+
+이 모드는 아래를 순서대로 수행합니다.
+
+- AI-Fashion-Forum 로컬 repo의 git 상태, 최근 커밋, 변경 파일을 읽음
+- GitHub issue와 로컬 report/progress를 합쳐 context pack 생성
+- 최신 workforce handoff가 있으면 자동으로 commitment 입력에 포함
+- commitment 실행 후 선택된 다음 workforce까지 연쇄 실행
+
 ### 4. Run a specific workforce with handoff/context
 
 ```bash
@@ -117,3 +135,20 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - 아직 기본 채택하지 않는 이유: 장기 컨텍스트는 CAMEL 내부 memory보다 GitHub issue, reports, progress log, handoff 문서가 더 투명하고 재검토 가능하기 때문입니다.
 
 자세한 평가는 [docs/shared-memory-evaluation.md](docs/shared-memory-evaluation.md) 에 있습니다.
+
+## Semi-Autonomous Boundary
+
+이 저장소의 목표는 완전 무인 agent OS가 아니라 `semi-autonomous decision studio`입니다.
+
+자동화하는 것:
+- source repo 상태 읽기
+- GitHub issue / report / progress 수집
+- latest handoff 자동 포함
+- commitment 실행과 next workforce 체이닝
+- 표준 산출물 저장
+
+사람이 여전히 확인해야 하는 것:
+- external report 중요도 판단
+- 잘못된 route 결과 수정
+- 실제 GitHub 반영 여부 승인
+- 프로젝트 방향을 바꾸는 최종 결정

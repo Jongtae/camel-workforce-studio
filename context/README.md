@@ -13,7 +13,9 @@
 ## Build
 
 ```bash
-python3 scripts/context-builder/build_context.py --repo Jongtae/AI-Fashion-Forum
+python3 scripts/context-builder/build_context.py \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum
 ```
 
 생성된 workflow input은 예를 들어 아래처럼 workforce 실행에 연결할 수 있다.
@@ -22,3 +24,5 @@ python3 scripts/context-builder/build_context.py --repo Jongtae/AI-Fashion-Forum
 python3 scripts/requirement-debate/commitment_debate.py \
   --context-pack context/workflow-inputs/commitment.md
 ```
+
+`current_situation.md`에는 GitHub issue, 로컬 source repo의 git 상태, 최근 커밋, 변경 파일, 최신 workforce handoff 요약이 함께 들어간다.

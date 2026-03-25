@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
 
 scripts/requirement-debate/outputs/
 context/raw/github/issues.json

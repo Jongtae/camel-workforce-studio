@@ -5,6 +5,7 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
+import sys
 from typing import Iterable, List
 
 
@@ -13,6 +14,12 @@ CONTEXT_DIR = ROOT_DIR / "context"
 RAW_DIR = CONTEXT_DIR / "raw"
 NORMALIZED_DIR = CONTEXT_DIR / "normalized"
 WORKFLOW_INPUTS_DIR = CONTEXT_DIR / "workflow-inputs"
+REQUIREMENT_DEBATE_DIR = ROOT_DIR / "scripts" / "requirement-debate"
+
+if str(REQUIREMENT_DEBATE_DIR) not in sys.path:
+    sys.path.insert(0, str(REQUIREMENT_DEBATE_DIR))
+
+from workforce_artifacts import summarize_latest_run
 
 
 WORKFLOW_OBJECTIVES = {
@@ -34,6 +41,11 @@ def ensure_dirs() -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
+def default_source_dir() -> str:
+    candidate = ROOT_DIR.parent / "AI-Fashion-Forum"
+    return str(candidate)
+
+
 def run_gh_json(repo: str, args: List[str]) -> list:
     cmd = ["gh", "issue", "list", "--repo", repo, *args]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -43,6 +55,18 @@ def run_gh_json(repo: str, args: List[str]) -> list:
         return json.loads(result.stdout)
     except json.JSONDecodeError:
         return []
+
+
+def run_git_command(repo_dir: Path, args: List[str]) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
 
 
 def collect_github_issues(repo: str) -> list:
@@ -63,6 +87,42 @@ def collect_github_issues(repo: str) -> list:
         encoding="utf-8",
     )
     return issues
+
+
+def collect_source_repo_state(source_dir: Path) -> dict:
+    if not source_dir.exists():
+        return {
+            "exists": False,
+            "path": str(source_dir),
+            "branch": "",
+            "status": "",
+            "recent_commits": [],
+            "changed_files": [],
+        }
+
+    branch = run_git_command(source_dir, ["rev-parse", "--abbrev-ref", "HEAD"])
+    status = run_git_command(source_dir, ["status", "--short"])
+    commits_raw = run_git_command(
+        source_dir,
+        ["log", "--max-count=8", "--pretty=format:%h%x09%ad%x09%s", "--date=short"],
+    )
+    changed_files_raw = run_git_command(source_dir, ["status", "--short"])
+    recent_commits = []
+    for line in commits_raw.splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) == 3:
+            recent_commits.append(
+                {"sha": parts[0].strip(), "date": parts[1].strip(), "subject": parts[2].strip()}
+            )
+    changed_files = [line.strip() for line in changed_files_raw.splitlines() if line.strip()]
+    return {
+        "exists": True,
+        "path": str(source_dir),
+        "branch": branch,
+        "status": status,
+        "recent_commits": recent_commits,
+        "changed_files": changed_files,
+    }
 
 
 def read_text_files(paths: Iterable[Path]) -> list:
@@ -124,6 +184,61 @@ def render_project_snapshot(repo: str, issues: list) -> str:
         "- Workforce runs are expected to consume normalized context rather than raw issue or report dumps.\n"
         f"- Open GitHub issues collected for this build: {len(issues)}\n"
     )
+
+
+def render_current_situation(repo: str, source_state: dict, latest_workforce_state: str) -> str:
+    lines = [
+        "# Current Situation",
+        "",
+        f"- GitHub repository target: {repo}",
+        f"- Local source repository path: {source_state.get('path', '')}",
+    ]
+    if not source_state.get("exists"):
+        lines.append("- Local source repository was not found, so git-based situation checks are unavailable.")
+    else:
+        lines.extend(
+            [
+                f"- Current branch: {source_state.get('branch', '') or 'unknown'}",
+                f"- Changed file count: {len(source_state.get('changed_files', []))}",
+                f"- Recent commit count collected: {len(source_state.get('recent_commits', []))}",
+                "",
+                "## Working Tree Status",
+            ]
+        )
+        status = source_state.get("status", "")
+        lines.append(status if status else "- Working tree is clean.")
+    lines.extend(["", latest_workforce_state.strip(), ""])
+    return "\n".join(lines).strip() + "\n"
+
+
+def render_source_repo_state(source_state: dict) -> str:
+    lines = ["# Source Repo State", ""]
+    if not source_state.get("exists"):
+        lines.append("- Local source repository was not found. Pass `--source-dir` to enable git situation checks.")
+        return "\n".join(lines) + "\n"
+
+    lines.extend(
+        [
+            f"- Path: {source_state['path']}",
+            f"- Branch: {source_state.get('branch', '') or 'unknown'}",
+            "",
+            "## Changed Files",
+        ]
+    )
+    changed_files = source_state.get("changed_files", [])
+    if changed_files:
+        lines.extend([f"- {line}" for line in changed_files[:30]])
+    else:
+        lines.append("- Working tree is clean.")
+
+    lines.extend(["", "## Recent Commits"])
+    commits = source_state.get("recent_commits", [])
+    if commits:
+        for commit in commits:
+            lines.append(f"- {commit['date']} {commit['sha']} {commit['subject']}")
+    else:
+        lines.append("- No recent commits were collected.")
+    return "\n".join(lines).strip() + "\n"
 
 
 def render_active_issues(issues: list) -> str:
@@ -195,6 +310,10 @@ def render_open_questions(issues: list, progress_items: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def render_latest_workforce_state(latest_workforce_state: str) -> str:
+    return latest_workforce_state.strip() + ("\n" if latest_workforce_state else "")
+
+
 def write_normalized_file(name: str, content: str) -> Path:
     path = NORMALIZED_DIR / name
     path.write_text(content, encoding="utf-8")
@@ -210,8 +329,17 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Objective
 {WORKFLOW_OBJECTIVES[workforce]}
 
+## Current Situation
+{normalized['current_situation']}
+
 ## Project Snapshot
 {normalized['project_snapshot']}
+
+## Source Repo State
+{normalized['source_repo_state']}
+
+## Latest Workforce State
+{normalized['latest_workforce_state']}
 
 ## Active Issues
 {normalized['active_issues']}
@@ -247,6 +375,12 @@ def main() -> None:
         default="Jongtae/AI-Fashion-Forum",
         help="수집할 GitHub repository (owner/name)",
     )
+    parser.add_argument(
+        "--source-dir",
+        type=str,
+        default=default_source_dir(),
+        help="상황을 읽을 로컬 source repository 경로",
+    )
     args = parser.parse_args()
 
     ensure_dirs()
@@ -254,9 +388,14 @@ def main() -> None:
     issues = collect_github_issues(args.repo)
     reports = collect_reports()
     progress_items = collect_progress_logs()
+    source_state = collect_source_repo_state(Path(args.source_dir))
+    latest_workforce_state = summarize_latest_run(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
     normalized = {
+        "current_situation": render_current_situation(args.repo, source_state, latest_workforce_state),
         "project_snapshot": render_project_snapshot(args.repo, issues),
+        "source_repo_state": render_source_repo_state(source_state),
+        "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
         "active_issues": render_active_issues(issues),
         "recent_progress": render_recent_progress(progress_items),
         "external_report_briefs": render_external_report_briefs(reports),
@@ -264,7 +403,10 @@ def main() -> None:
     }
 
     for filename, content in [
+        ("current_situation.md", normalized["current_situation"]),
         ("project_snapshot.md", normalized["project_snapshot"]),
+        ("source_repo_state.md", normalized["source_repo_state"]),
+        ("latest_workforce_state.md", normalized["latest_workforce_state"]),
         ("active_issues.md", normalized["active_issues"]),
         ("recent_progress.md", normalized["recent_progress"]),
         ("external_report_briefs.md", normalized["external_report_briefs"]),

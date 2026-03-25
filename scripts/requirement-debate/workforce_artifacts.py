@@ -292,3 +292,72 @@ def load_context_pack(path: Optional[str]) -> str:
     if not path:
         return ""
     return Path(path).read_text(encoding="utf-8").strip()
+
+
+def discover_latest_run(output_dir: Path) -> Optional[Path]:
+    if not output_dir.exists():
+        return None
+    run_dirs = sorted([path for path in output_dir.iterdir() if path.is_dir()], reverse=True)
+    return run_dirs[0] if run_dirs else None
+
+
+def discover_latest_handoff(output_dir: Path) -> Optional[Path]:
+    latest_run = discover_latest_run(output_dir)
+    if not latest_run:
+        return None
+    handoff = latest_run / "handoff.md"
+    return handoff if handoff.exists() else None
+
+
+def summarize_latest_run(output_dir: Path) -> str:
+    latest_run = discover_latest_run(output_dir)
+    if not latest_run:
+        return "# Latest Workforce State\n\n- No previous workforce run artifacts were found.\n"
+
+    metadata_path = latest_run / "metadata.json"
+    decision_path = latest_run / "decision.md"
+    handoff_path = latest_run / "handoff.md"
+
+    workforce = "unknown"
+    topic = ""
+    target_workforce = ""
+    next_topic = ""
+    if metadata_path.exists():
+        try:
+            payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+            workforce = payload.get("workforce", workforce)
+            topic = payload.get("topic", "")
+            target_workforce = payload.get("target_workforce", "")
+            next_topic = payload.get("next_topic", "")
+        except json.JSONDecodeError:
+            pass
+
+    decision_summary = ""
+    if decision_path.exists():
+        decision_summary = first_section(
+            decision_path.read_text(encoding="utf-8"),
+            "Summary",
+            "Key Decisions",
+            "Required Decisions",
+        )
+    if not decision_summary and handoff_path.exists():
+        decision_summary = first_section(
+            handoff_path.read_text(encoding="utf-8"),
+            "Decisions Already Fixed",
+            "Why This Handoff",
+        )
+
+    lines = [
+        "# Latest Workforce State",
+        "",
+        f"- Latest run directory: {latest_run}",
+        f"- Workforce: {workforce}",
+        f"- Topic: {topic or 'unknown'}",
+        f"- Suggested next workforce: {target_workforce or 'TBD'}",
+        f"- Suggested next topic: {next_topic or 'TBD'}",
+        "",
+        "## Latest Decision Summary",
+        decision_summary.strip() if decision_summary else "- No previous decision summary found.",
+        "",
+    ]
+    return "\n".join(lines)
