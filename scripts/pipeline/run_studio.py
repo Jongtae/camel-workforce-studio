@@ -64,6 +64,64 @@ def main() -> None:
         help="Run only commitment without chaining to the selected next workforce",
     )
     parser.add_argument(
+        "--create-issue",
+        action="store_true",
+        help="선택된 workforce 결과를 대상 repo에 issue로 발급",
+    )
+    parser.add_argument(
+        "--issue-type",
+        type=str,
+        default="task",
+        help="발급 형태: single, task, epic, sprint, bundle",
+    )
+    parser.add_argument(
+        "--issue-label",
+        action="append",
+        default=[],
+        help="추가 issue label (여러 번 지정 가능)",
+    )
+    parser.add_argument(
+        "--issue-assignee",
+        action="append",
+        default=[],
+        help="single/epic/sprint에 붙일 담당자 login",
+    )
+    parser.add_argument(
+        "--task-assignee",
+        action="append",
+        default=[],
+        help="bundle child task를 순서대로 분배할 담당자 login",
+    )
+    parser.add_argument(
+        "--issue-milestone",
+        type=str,
+        default=None,
+        help="생성할 issue milestone 이름",
+    )
+    parser.add_argument(
+        "--issue-project",
+        type=str,
+        default=None,
+        help="생성할 issue project 제목",
+    )
+    parser.add_argument(
+        "--epic-label",
+        type=str,
+        default=None,
+        help="Epic에 추가할 label 예: epic:forum-actions",
+    )
+    parser.add_argument(
+        "--with-sprint",
+        action="store_true",
+        help="bundle 생성 시 sprint planning issue도 함께 생성",
+    )
+    parser.add_argument(
+        "--max-child-issues",
+        type=int,
+        default=5,
+        help="bundle 생성 시 child issue 최대 개수",
+    )
+    parser.add_argument(
         "--share-memory",
         action="store_true",
         help="Enable CAMEL share_memory during workforce runs",
@@ -105,6 +163,24 @@ def main() -> None:
         commitment_cmd.extend(["--handoff", handoff_path])
     if not args.no_run_next:
         commitment_cmd.append("--run-next")
+    if args.create_issue:
+        commitment_cmd.extend(["--create-issue", "--issue-repo", args.repo, "--issue-type", args.issue_type])
+        for label in args.issue_label:
+            commitment_cmd.extend(["--issue-label", label])
+        for assignee in args.issue_assignee:
+            commitment_cmd.extend(["--issue-assignee", assignee])
+        for assignee in args.task_assignee:
+            commitment_cmd.extend(["--task-assignee", assignee])
+        if args.issue_milestone:
+            commitment_cmd.extend(["--issue-milestone", args.issue_milestone])
+        if args.issue_project:
+            commitment_cmd.extend(["--issue-project", args.issue_project])
+        if args.epic_label:
+            commitment_cmd.extend(["--epic-label", args.epic_label])
+        if args.with_sprint:
+            commitment_cmd.append("--with-sprint")
+        if args.max_child_issues:
+            commitment_cmd.extend(["--max-child-issues", str(args.max_child_issues)])
     if args.share_memory:
         commitment_cmd.append("--share-memory")
 

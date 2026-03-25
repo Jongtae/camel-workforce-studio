@@ -99,6 +99,31 @@ python3 scripts/pipeline/run_studio.py \
 - 최신 workforce handoff가 있으면 자동으로 commitment 입력에 포함
 - commitment 실행 후 선택된 다음 workforce까지 연쇄 실행
 
+### 3-2. Run and issue AI-Fashion-Forum issues
+
+```bash
+python3 scripts/pipeline/run_studio.py \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
+  --rounds 1 \
+  --create-issue \
+  --issue-type bundle \
+  --epic-label epic:forum-actions \
+  --issue-milestone "Sprint 1 - Identity Loop Vertical Slice" \
+  --task-assignee jongtae \
+  --task-assignee alice \
+  --with-sprint
+```
+
+이 모드는 선택된 workforce 결과를 기준으로 아래를 생성할 수 있습니다.
+
+- `single` 또는 `task`: 단일 실행 issue
+- `epic`: umbrella issue
+- `sprint`: sprint planning issue
+- `bundle`: epic + ordered child tasks + optional sprint issue
+
+`bundle`에서는 `Next Actions` 또는 `Acceptance Criteria`를 기준으로 child task를 만들고, `--task-assignee` 순서대로 담당자를 round-robin 배정합니다. sprint issue에는 담당자별 처리 순서도 함께 기록됩니다.
+
 ### 4. Run a specific workforce with handoff/context
 
 ```bash
@@ -128,6 +153,25 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - `metadata.json`: 실행 메타데이터
 
 세부 규약은 [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md) 에 정리되어 있습니다.
+
+## Issue Issuance
+
+이 저장소는 결과를 `AI-Fashion-Forum` 쪽 GitHub issue로 보낼 수 있습니다.
+
+- 기본 대상 repo: `Jongtae/AI-Fashion-Forum`
+- 대상 변경: `--issue-repo owner/repo`
+- 발급 유형: `--issue-type single|task|epic|sprint|bundle`
+- 추가 label: `--issue-label`
+- epic label: `--epic-label`
+- milestone: `--issue-milestone`
+- project: `--issue-project`
+- 담당자 배정: `--issue-assignee`, `--task-assignee`
+- sprint 묶음 생성: `--with-sprint`
+
+주의:
+- GitHub Project 추가는 `gh auth refresh -s project` 권한이 없으면 자동으로 생략됩니다.
+- `bundle`은 Epic을 먼저 만들고, 그 아래 child task를 순서대로 발급합니다.
+- child task의 처리 순서는 `Next Actions` 순서를 따릅니다.
 
 ## Shared Memory Policy
 
