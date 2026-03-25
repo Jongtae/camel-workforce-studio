@@ -187,6 +187,10 @@ def render_project_snapshot(repo: str, issues: list) -> str:
 
 
 def render_current_situation(repo: str, source_state: dict, latest_workforce_state: str) -> str:
+    latest_summary = latest_workforce_state.strip() or "- No previous workforce state found."
+    recent_commit_subjects = [
+        commit["subject"] for commit in source_state.get("recent_commits", [])[:3]
+    ]
     lines = [
         "# Current Situation",
         "",
@@ -202,12 +206,27 @@ def render_current_situation(repo: str, source_state: dict, latest_workforce_sta
                 f"- Changed file count: {len(source_state.get('changed_files', []))}",
                 f"- Recent commit count collected: {len(source_state.get('recent_commits', []))}",
                 "",
+                "## Current Signals",
+                f"- Working tree is {'clean' if not source_state.get('changed_files') else 'dirty'}",
+                f"- Latest commit directions: {', '.join(recent_commit_subjects) if recent_commit_subjects else 'none'}",
+                "",
+                "## Already Decided Or Suggested",
+                "- Latest workforce state below is the current studio-level baseline unless explicitly challenged.",
+                "",
                 "## Working Tree Status",
             ]
         )
         status = source_state.get("status", "")
         lines.append(status if status else "- Working tree is clean.")
-    lines.extend(["", latest_workforce_state.strip(), ""])
+        lines.extend(
+            [
+                "",
+                "## Current Blocker Heuristic",
+                "- If the working tree is clean and recent commits landed, the blocker is more likely a missing next decision than missing code edits.",
+                "- If latest workforce state already suggests a next workforce/topic, commitment should either confirm it or explain why it must change.",
+            ]
+        )
+    lines.extend(["", latest_summary, ""])
     return "\n".join(lines).strip() + "\n"
 
 

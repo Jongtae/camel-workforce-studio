@@ -327,6 +327,12 @@ SCENARIOS = {
 3. Topic Architect: 선택된 workforce의 역할 충돌이 드러나는 토픽 문자열을 설계하라
 4. Commitment Critic: workforce 선택과 토픽의 품질을 검증하고 문제점을 지적하라
 
+## 현재 상황 해석 규칙
+- Current Situation, Source Repo State, Latest Workforce State에 있는 내용을 최우선 근거로 사용하라
+- 최신 handoff에 이미 있는 결정을 반복하지 말고, 아직 비어 있는 다음 결정을 찾는 데 집중하라
+- Git 상태가 clean이면 "코드 변경 자체"보다 "다음에 어떤 결정을 내려야 구현/운영이 이어지는가"를 우선 판단하라
+- 최근 커밋이나 latest workforce state가 특정 방향을 가리키면, 그 방향을 그대로 따를지 수정할지 명시적으로 판단하라
+
 ## 기대 산출물
 - Selected Workforce (society / operator / core / default)
 - Topic (--topic 인자로 바로 사용 가능한 완성된 문자열)
@@ -342,6 +348,7 @@ SCENARIOS = {
 - 토픽은 반드시 완성된 문장으로 작성하라 (--topic 인자로 바로 복사 가능해야 함)
 - 시뮬레이션 환경 규칙을 직접 설계하지 말고 workforce와 토픽 선택에 집중하라
 - "추후 결정" 같은 표현 없이 지금 결정 가능한 것을 결정하라
+- 현재 상황 요약 없이 곧바로 일반론적인 gap을 제시하지 말라
 """,
         "coordinator_prompt": COMMITMENT_COORDINATOR_PROMPT,
         "final_prompt": COMMITMENT_FINAL_SYNTHESIZER_PROMPT,
@@ -643,6 +650,49 @@ def build_workforce(
     )
 
     return workforce
+
+
+def run_commitment_decision(
+    scenario: dict,
+    model_name: str,
+    topic: str,
+    handoff_text: str = "",
+    context_pack_text: str = "",
+) -> tuple[list[dict[str, str]], str]:
+    """commitment는 단일 decision agent로 실행한다."""
+    ChatAgent = camel_runtime()["ChatAgent"]
+    model = create_model(model_name)
+    decision_agent = ChatAgent(system_message=scenario["final_prompt"], model=model)
+
+    prompt = f"""{scenario["build_task_prompt"](topic)}
+
+## Operating Mode
+- 이번 commitment 실행은 다중 workforce orchestration이 아니라 단일 decision agent 모드다.
+- Current Situation, Source Repo State, Latest Workforce State를 먼저 읽고 이미 제안된 방향을 그대로 유지할지 수정할지 판단하라.
+- 일반론이 아니라 현재 입력에 있는 근거를 직접 인용하듯 활용하라.
+
+## Handoff Context
+{handoff_text if handoff_text else "- 이전 workforce handoff 없음"}
+
+## External Context Pack
+{context_pack_text if context_pack_text else "- external context pack 없음"}
+
+## Additional Instructions
+- 먼저 현재 상황에서 이미 결정된 것과 아직 막힌 것을 짧게 식별하라.
+- 그 다음 하나의 workforce와 하나의 topic만 확정하라.
+- Topic에는 `--topic` 접두사를 넣지 말고 완성된 문장만 적어라.
+- Latest Workforce State의 제안을 그대로 유지한다면 그 이유를 쓰고, 바꾼다면 왜 바꾸는지 명시하라.
+"""
+    response = decision_agent.step(prompt)
+    final_result = extract_agent_text(response)
+    round_results = [
+        {
+            "round": "1",
+            "raw_result": final_result,
+            "normalized_result": normalize_issue_text(final_result),
+        }
+    ]
+    return round_results, final_result
 
 
 def build_round_task_prompt(
@@ -958,39 +1008,50 @@ def run_workforce(
     print(f"  ✓ {len(roles_config['roles'])}개 역할 로드 완료")
     print()
 
-    print("🔧 Workforce 구성 중...")
-    workforce = build_workforce(
-        roles_config,
-        scenario,
-        model_name,
-        share_memory=share_memory,
-    )
-    print()
+    if workforce_key == "commitment":
+        print("🧭 Commitment는 단일 decision agent 모드로 실행합니다...")
+        print("-" * 60)
+        round_results, final_result = run_commitment_decision(
+            scenario=scenario,
+            model_name=model_name,
+            topic=resolved_topic,
+            handoff_text=handoff_text,
+            context_pack_text=context_pack_text,
+        )
+    else:
+        print("🔧 Workforce 구성 중...")
+        workforce = build_workforce(
+            roles_config,
+            scenario,
+            model_name,
+            share_memory=share_memory,
+        )
+        print()
 
-    print("🚀 토론 시작...")
-    print("-" * 60)
-    round_results = run_multi_round_debate(
-        workforce=workforce,
-        scenario=scenario,
-        topic=resolved_topic,
-        rounds=rounds,
-        handoff_text=handoff_text,
-        context_pack_text=context_pack_text,
-    )
+        print("🚀 토론 시작...")
+        print("-" * 60)
+        round_results = run_multi_round_debate(
+            workforce=workforce,
+            scenario=scenario,
+            topic=resolved_topic,
+            rounds=rounds,
+            handoff_text=handoff_text,
+            context_pack_text=context_pack_text,
+        )
 
-    print("🧠 최종 합성 중...")
-    final_result = synthesize_multi_round_result(
-        scenario=scenario,
-        model_name=model_name,
-        topic=resolved_topic,
-        round_results=round_results,
-        handoff_text=handoff_text,
-        context_pack_text=context_pack_text,
-    )
+        print("🧠 최종 합성 중...")
+        final_result = synthesize_multi_round_result(
+            scenario=scenario,
+            model_name=model_name,
+            topic=resolved_topic,
+            round_results=round_results,
+            handoff_text=handoff_text,
+            context_pack_text=context_pack_text,
+        )
     result_text = render_full_report(
         scenario=scenario,
         topic=resolved_topic,
-        rounds=rounds,
+        rounds=len(round_results),
         round_results=round_results,
         final_result=final_result,
     )
@@ -1017,7 +1078,7 @@ def run_workforce(
         workforce_key=workforce_key,
         scenario_label=scenario["label"],
         topic=resolved_topic,
-        rounds=rounds,
+        rounds=len(round_results),
         participants=scenario["participants"],
         full_report_text=result_text,
         final_result_text=final_result,
