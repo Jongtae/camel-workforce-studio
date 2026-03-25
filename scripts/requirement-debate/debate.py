@@ -193,6 +193,10 @@ TASK_AGENT_SYSTEM_PROMPT = """당신은 Workforce 태스크 라우터입니다.
 - worker id는 반드시 유효한 후보 중에서만 선택한다.
 - worker가 없는 경우 임의 값이나 none을 쓰지 않는다.
 - 태스크가 충분히 구체적이지 않으면 더 구체적인 텍스트 태스크로 재작성한다.
+- society workforce 태스크를 재작성할 때는 action loop만 남기지 말고 state model, state transitions, content consumption, required backend artifacts를 함께 보존하라.
+- society workforce 태스크에는 가능하면 post/comment/react/lurk/silence와 internal forum content/external web content를 직접 포함하라.
+- operator workforce 태스크에는 moderation/monitoring/policy/improvement 중 최소 두 가지 이상을 남겨라.
+- core workforce 태스크에는 mock-to-service/API/migration/execution loop 중 최소 두 가지 이상을 남겨라.
 """
 
 SECTION_ORDER = [
@@ -470,7 +474,7 @@ SCENARIOS = {
         "coordinator_prompt": COMMON_COORDINATOR_PROMPT + "\n추가 규칙: 이번 토론은 forum 안에서 action하는 AI agent backend 요구사항에 집중한다. 추상적인 사회 현상보다 action loop, state schema, memory writeback, observable trace를 우선한다.\n",
         "final_prompt": COMMON_FINAL_SYNTHESIZER_PROMPT + "\n추가 규칙: 최종 결과는 AI agent backend가 구현해야 할 action loop, state/memory requirement, observable trace, forum artifact 생성을 우선 정리하라.\n",
         "round_focus_guide": {
-            1: "agent가 forum 안에서 어떤 action loop를 가져야 하는지와 최소 backend 범위를 정의하라.",
+            1: "agent가 forum 안에서 어떤 action loop를 가져야 하는지뿐 아니라 state model, content consumption loop, required backend artifacts까지 함께 정의하라.",
             2: "상태, 기억, 관계, 노출, 행동 스키마와 action 선택 규칙을 구체화하라.",
             3: "agent의 경향성 형성, belief 변화, 실패 시나리오, 하드코딩처럼 보이는 위험을 점검하라.",
             4: "반복 실험에 필요한 trace, snapshot, metric, artifact를 압축하라.",
