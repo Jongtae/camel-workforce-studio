@@ -166,6 +166,7 @@ AI-Fashion-Forum의 실제 agent backend 요구사항을 도출하는 팀이다.
 
 앞으로도 구조를 바꾸면 아래 문서를 같이 갱신하는 것이 좋다.
 
+- `agent.md`와 `CLAUDE.md`: agent 작업 가이드. 둘 중 하나를 바꾸면 반드시 다른 하나도 함께 갱신
 - 큰 운영 기준 변경: 이 문서
 - 활용 가능성 판정 변경: `ai-fashion-forum-readiness-scorecard.md`
 - 튜닝 실행 기록: `iteration-log.md`

@@ -187,6 +187,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 
 GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 
+- [agent.md](agent.md): Codex 및 일반 coding agent용 저장소 운영 가이드
 - [CLAUDE.md](CLAUDE.md): Claude Code용 저장소 운영 가이드
 - [docs/project-history-and-playbook.md](docs/project-history-and-playbook.md): 왜 이 저장소를 만들었는지, 어떤 시행착오가 있었는지, 다음 사람이 어떻게 이어받아야 하는지
 - [docs/ai-fashion-forum-readiness-scorecard.md](docs/ai-fashion-forum-readiness-scorecard.md): AI-Fashion-Forum 실전 활용 가능 판정 기준
@@ -209,3 +210,12 @@ GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 - 잘못된 route 결과 수정
 - 실제 GitHub 반영 여부 승인
 - 프로젝트 방향을 바꾸는 최종 결정
+
+## Documentation Sync Rule
+
+에이전트 작업 가이드를 바꾸는 변경이 있으면 아래 파일을 함께 갱신합니다.
+
+- `agent.md`
+- `CLAUDE.md`
+
+두 파일은 항상 같은 운영 기준을 반영해야 합니다.

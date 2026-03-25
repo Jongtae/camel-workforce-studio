@@ -1,11 +1,11 @@
-# CLAUDE.md
+# agent.md
 
-이 파일은 Claude Code가 `camel-workforce-studio`를 다룰 때 참고하는 작업 가이드다.
+이 파일은 Codex를 포함한 agentic coding assistant가 `camel-workforce-studio`를 다룰 때 참고하는 작업 가이드다.
 
 ## Sync Policy
 
-이 파일의 내용이 바뀌면 반드시 `agent.md`도 함께 갱신해야 한다.
-반대로 `agent.md`가 바뀌면 `CLAUDE.md`도 같은 의미로 동기화해야 한다.
+이 파일의 내용이 바뀌면 반드시 `CLAUDE.md`도 함께 갱신해야 한다.
+반대로 `CLAUDE.md`가 바뀌면 `agent.md`도 같은 의미로 동기화해야 한다.
 
 두 파일은 표현만 약간 다를 수 있지만, 아래 항목은 항상 같은 기준을 유지해야 한다.
 
@@ -111,7 +111,7 @@ sprint issue에는 담당자별 처리 순서가 같이 기록된다.
 
 ## Society Quality Bar
 
-Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준을 유지해야 한다.
+Codex가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준을 유지해야 한다.
 
 - `post/comment/react/lurk/silence`를 직접 다룰 것
 - 각 action에 대해 다음을 가능하면 모두 포함할 것
