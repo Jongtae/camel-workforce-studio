@@ -26,7 +26,9 @@ from pathlib import Path
 from typing import Any, Optional
 
 from workforce_artifacts import (
+    bullet_lines,
     build_handoff_markdown,
+    first_section,
     load_context_pack,
     load_handoff,
     parse_commitment_decision,
@@ -195,6 +197,8 @@ TASK_AGENT_SYSTEM_PROMPT = """당신은 Workforce 태스크 라우터입니다.
 - 태스크가 충분히 구체적이지 않으면 더 구체적인 텍스트 태스크로 재작성한다.
 - society workforce 태스크를 재작성할 때는 action loop만 남기지 말고 state model, state transitions, content consumption, required backend artifacts를 함께 보존하라.
 - society workforce 태스크에는 가능하면 post/comment/react/lurk/silence와 internal forum content/external web content를 직접 포함하라.
+- society workforce 태스크에는 가능하면 각 action이 어떤 state를 읽고 어떤 state를 쓰며 어떤 artifact를 남기는지도 포함하라.
+- society workforce 태스크에서 required backend artifacts를 언급할 때는 trace/snapshot/event/forum artifact의 필요성까지 남겨라.
 - operator workforce 태스크에는 moderation/monitoring/policy/improvement 중 최소 두 가지 이상을 남겨라.
 - core workforce 태스크에는 mock-to-service/API/migration/execution loop 중 최소 두 가지 이상을 남겨라.
 """
@@ -345,6 +349,70 @@ def enforce_commitment_decision_constraints(text: str) -> str:
     fallback_topic = SCENARIOS["society"]["default_topic"]
     return replace_markdown_section(text, "Topic", fallback_topic)
 
+
+def ensure_section_has_bullets(text: str, section_name: str, bullets: list[str]) -> str:
+    current = first_section(text, section_name)
+    if not current:
+        block = "## " + section_name + "\n" + "\n".join(f"- {item}" for item in bullets) + "\n"
+        return text.strip() + "\n\n" + block
+
+    existing_lines = bullet_lines(current)
+    missing = [item for item in bullets if item not in existing_lines]
+    if not missing:
+        return text
+
+    augmented = current.rstrip() + "\n" + "\n".join(f"- {item}" for item in missing)
+    return replace_markdown_section(text, section_name, augmented)
+
+
+def enforce_society_decision_constraints(text: str) -> str:
+    if not text.strip():
+        return text
+
+    enforced = text
+    enforced = ensure_section_has_bullets(
+        enforced,
+        "Technical Notes",
+        [
+            "forum 내부 콘텐츠 소비와 외부 web 콘텐츠 소비를 같은 state model과 memory writeback 경로에 연결해야 한다.",
+            "API contract는 action request, state snapshot, trace/event 저장 경로를 함께 정의해야 한다.",
+        ],
+    )
+    enforced = ensure_section_has_bullets(
+        enforced,
+        "Required Artifacts",
+        [
+            "internal forum content consumption trace",
+            "external web content ingestion/event trace",
+            "state snapshot 및 action/event 저장 구조",
+            "forum artifact(post/comment/react) 생성 및 기록 규약",
+        ],
+    )
+    enforced = ensure_section_has_bullets(
+        enforced,
+        "Acceptance Criteria",
+        [
+            "[ ] forum 내부 콘텐츠 소비와 외부 web 콘텐츠 소비가 같은 state model에 누적되는 방식이 정의되었다.",
+            "[ ] action request, trace, snapshot, forum artifact를 포함한 API/backend contract가 정의되었다.",
+        ],
+    )
+    enforced = ensure_section_has_bullets(
+        enforced,
+        "Next Actions",
+        [
+            "internal/external content ingestion과 memory writeback을 포함한 action-state contract를 문서화한다.",
+            "trace, snapshot, event, forum artifact를 저장할 backend/API schema를 정의한다.",
+        ],
+    )
+    enforced = ensure_section_has_bullets(
+        enforced,
+        "Summary",
+        [
+            "forum 내부 콘텐츠와 외부 web 콘텐츠 소비를 같은 state/action backend로 연결해야 한다.",
+        ],
+    )
+    return enforced
+
 SCENARIOS = {
     "commitment": {
         "label": "논의 방향 결정",
@@ -470,6 +538,10 @@ SCENARIOS = {
 - forum 내부 콘텐츠 소비와 외부 web 콘텐츠 소비가 같은 characteristic 진화 루프에 어떻게 연결되는지 구체적으로 적어라
 - 단순 추천 앱 기능 논의나 커뮤니티 일반론으로 축소하지 말라
 - Action Loop, State Model, State Transitions, Content Consumption, Required Backend Artifacts를 빠뜨리지 말라
+- Action Loop에서는 각 action이 어떤 state를 읽고 쓰며 어떤 artifact를 남기는지 적어라
+- Action Loop에서는 각 action의 trigger condition과 successful outcome도 적어라
+- Required Backend Artifacts에서는 각 artifact가 왜 필요한지 적어라
+- State Transitions에서는 state change가 다음 행동 선택에 어떤 영향을 주는지 적어라
 """,
         "coordinator_prompt": COMMON_COORDINATOR_PROMPT + "\n추가 규칙: 이번 토론은 forum 안에서 action하는 AI agent backend 요구사항에 집중한다. 추상적인 사회 현상보다 action loop, state schema, memory writeback, observable trace를 우선한다.\n",
         "final_prompt": COMMON_FINAL_SYNTHESIZER_PROMPT + "\n추가 규칙: 최종 결과는 AI agent backend가 구현해야 할 action loop, state/memory requirement, observable trace, forum artifact 생성을 우선 정리하라.\n",
@@ -872,11 +944,14 @@ def synthesize_multi_round_result(
 {context_pack_text if context_pack_text else "- external context pack 없음"}
 
 ## Round Results
-{compiled_rounds}
+    {compiled_rounds}
 
 {scenario["synthesis_prompt"]}"""
     response = synthesizer.step(prompt)
-    return extract_agent_text(response)
+    final_text = extract_agent_text(response)
+    if scenario.get("label") == "이용자 조직 시뮬레이션":
+        final_text = enforce_society_decision_constraints(final_text)
+    return final_text
 
 
 def render_full_report(
