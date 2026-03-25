@@ -187,6 +187,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 
 GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 
+- [CLAUDE.md](CLAUDE.md): Claude Code용 저장소 운영 가이드
 - [docs/project-history-and-playbook.md](docs/project-history-and-playbook.md): 왜 이 저장소를 만들었는지, 어떤 시행착오가 있었는지, 다음 사람이 어떻게 이어받아야 하는지
 - [docs/ai-fashion-forum-readiness-scorecard.md](docs/ai-fashion-forum-readiness-scorecard.md): AI-Fashion-Forum 실전 활용 가능 판정 기준
 - [docs/iteration-log.md](docs/iteration-log.md): iteration별 튜닝 기록과 점수 변화
