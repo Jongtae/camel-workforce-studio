@@ -23,7 +23,31 @@ roles:
       3. agent가 특정 경향성(취향, stance, social posture)을 가지게 하려면 어떤 상태 전이가 필요한지 설명하라
       4. forum 내부 콘텐츠 소비와 외부 web 콘텐츠 소비가 어떤 입력 루프로 연결되어야 하는지 설명하라
       5. 무엇이 관찰되면 이 backend가 살아 있다고 볼 수 있는지 설명하라
-      5. 추상적인 사회 현상보다 backend requirement와 action loop를 우선하라
+      6. 추상적인 사회 현상보다 backend requirement와 action loop를 우선하라
+
+      반드시 아래 형식으로 답하라.
+
+      ## Action Loop
+      - post / comment / react / lurk / silence의 역할과 순서
+
+      ## State Model
+      - characteristic, belief, memory, mutable axes, relationship state
+
+      ## State Transitions
+      - 어떤 조건에서 action이 바뀌고 characteristic이 유지/발전되는가
+
+      ## Content Consumption
+      - forum 내부 콘텐츠 소비
+      - 외부 web 콘텐츠 소비
+      - 두 입력이 같은 state model에 어떻게 합쳐지는가
+
+      ## Required Backend Artifacts
+      - trace / snapshot / event / stored action / forum artifact
+
+      규칙:
+      - 각 섹션을 반드시 채워라
+      - action 이름을 추상적으로 쓰지 말고 post/comment/react/lurk/silence로 명시하라
+      - state transition을 최소 3개 이상 bullet로 적어라
 
       한국어로 답변하세요.
 

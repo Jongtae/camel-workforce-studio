@@ -414,6 +414,7 @@ SCENARIOS = {
 - agent의 취향 경향성, belief 변화, memory writeback이 action 선택과 어떻게 연결되는지 구체적으로 적어라
 - forum 내부 콘텐츠 소비와 외부 web 콘텐츠 소비가 같은 characteristic 진화 루프에 어떻게 연결되는지 구체적으로 적어라
 - 단순 추천 앱 기능 논의나 커뮤니티 일반론으로 축소하지 말라
+- Action Loop, State Model, State Transitions, Content Consumption, Required Backend Artifacts를 빠뜨리지 말라
 """,
         "coordinator_prompt": COMMON_COORDINATOR_PROMPT + "\n추가 규칙: 이번 토론은 forum 안에서 action하는 AI agent backend 요구사항에 집중한다. 추상적인 사회 현상보다 action loop, state schema, memory writeback, observable trace를 우선한다.\n",
         "final_prompt": COMMON_FINAL_SYNTHESIZER_PROMPT + "\n추가 규칙: 최종 결과는 AI agent backend가 구현해야 할 action loop, state/memory requirement, observable trace, forum artifact 생성을 우선 정리하라.\n",

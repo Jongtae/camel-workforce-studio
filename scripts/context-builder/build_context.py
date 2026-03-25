@@ -24,9 +24,9 @@ from workforce_artifacts import summarize_latest_run
 
 WORKFLOW_OBJECTIVES = {
     "commitment": "현재 프로젝트에서 가장 중요한 gap을 식별하고 다음 workforce와 topic을 결정한다.",
-    "core": "mock-to-service 전환 관점에서 실제 구현과 아키텍처 결정을 구체화한다.",
-    "operator": "운영 조직의 관찰 프레임, 메트릭, 개입 레버를 정리한다.",
-    "society": "이용자 조직의 사회 규칙, 상태, 기억, 관계 모델을 정리한다.",
+    "core": "development 팀 관점에서 mock-to-service 전환을 위한 실제 구현과 아키텍처 결정을 구체화한다.",
+    "operator": "운영자 관점에서 컨텐츠 자정, 모니터링, 운영 정책, 기능 개선 레버를 정리한다.",
+    "society": "API 기반 forum 위에서 action하는 stateful AI agent의 상태, 기억, characteristic, 내부/외부 콘텐츠 소비 규칙을 정리한다.",
 }
 
 
