@@ -125,6 +125,55 @@ def collect_source_repo_state(source_dir: Path) -> dict:
     }
 
 
+def collect_source_repo_intent(source_dir: Path) -> dict:
+    intent = {
+        "exists": False,
+        "signals": [],
+    }
+    if not source_dir.exists():
+        return intent
+
+    files = {
+        "README": source_dir / "README.md",
+        "CLAUDE": source_dir / "CLAUDE.md",
+        "agent_loop": source_dir / "apps" / "sim-server" / "src" / "routes" / "agent-loop.js",
+        "action_space": source_dir / "packages" / "agent-core" / "action-space.js",
+        "identity_update": source_dir / "packages" / "agent-core" / "identity-update-rules.js",
+        "state_schema": source_dir / "packages" / "shared-types" / "state-schema.js",
+    }
+
+    signals = []
+    if files["README"].exists():
+        signals.append(
+            "- README 기준 이 제품은 AI-native fashion forum simulation이며, 살아 있는 social system을 목표로 한다."
+        )
+    if files["CLAUDE"].exists():
+        signals.append(
+            "- CLAUDE 기준 핵심 루프는 content-starter-pack -> biased exposure -> memory writeback -> state-driven posts 이다."
+        )
+    if files["agent_loop"].exists():
+        signals.append(
+            "- sim-server에는 agent tick 기반 action 실행 경로가 이미 존재하므로, society는 추상 현상보다 action backend 요구사항을 우선해야 한다."
+        )
+    if files["action_space"].exists():
+        signals.append(
+            "- agent-core에는 silence/lurk/react/comment 같은 action 선택 로직이 있으므로, society topic은 action/state contract를 다뤄야 한다."
+        )
+    if files["identity_update"].exists():
+        signals.append(
+            "- identity-update-rules가 존재하므로, characteristic 유지와 변화는 memory/state transition requirement로 연결되어야 한다."
+        )
+    if files["state_schema"].exists():
+        signals.append(
+            "- shared-types state schema가 존재하므로, society는 belief/interest/self-narrative/mutable axes를 포함한 state model을 전제로 논의해야 한다."
+        )
+
+    return {
+        "exists": True,
+        "signals": signals,
+    }
+
+
 def read_text_files(paths: Iterable[Path]) -> list:
     items = []
     for path in paths:
@@ -186,7 +235,23 @@ def render_project_snapshot(repo: str, issues: list) -> str:
     )
 
 
-def render_current_situation(repo: str, source_state: dict, latest_workforce_state: str) -> str:
+def render_source_repo_intent(source_intent: dict) -> str:
+    lines = ["# Source Repo Intent", ""]
+    if not source_intent.get("exists"):
+        lines.append("- Local source repository was not found, so repo intent signals are unavailable.")
+        return "\n".join(lines) + "\n"
+
+    signals = source_intent.get("signals", [])
+    if signals:
+        lines.extend(signals)
+    else:
+        lines.append("- No repo intent signals were extracted.")
+    return "\n".join(lines).strip() + "\n"
+
+
+def render_current_situation(
+    repo: str, source_state: dict, source_intent: dict, latest_workforce_state: str
+) -> str:
     latest_summary = latest_workforce_state.strip() or "- No previous workforce state found."
     recent_commit_subjects = [
         commit["subject"] for commit in source_state.get("recent_commits", [])[:3]
@@ -212,6 +277,7 @@ def render_current_situation(repo: str, source_state: dict, latest_workforce_sta
                 "",
                 "## Already Decided Or Suggested",
                 "- Latest workforce state below is the current studio-level baseline unless explicitly challenged.",
+                "- 다만 latest workforce state가 source repo intent와 어긋나면 source repo intent를 우선하라.",
                 "",
                 "## Working Tree Status",
             ]
@@ -224,8 +290,11 @@ def render_current_situation(repo: str, source_state: dict, latest_workforce_sta
                 "## Current Blocker Heuristic",
                 "- If the working tree is clean and recent commits landed, the blocker is more likely a missing next decision than missing code edits.",
                 "- If latest workforce state already suggests a next workforce/topic, commitment should either confirm it or explain why it must change.",
+                "- For society routing, abstract social-conflict topics are lower priority than agent backend/state/action/content-consumption requirements when the source repo already exposes agent-loop style implementation signals.",
             ]
         )
+    if source_intent.get("signals"):
+        lines.extend(["", "## Source Repo Intent Signals", *source_intent["signals"]])
     lines.extend(["", latest_summary, ""])
     return "\n".join(lines).strip() + "\n"
 
@@ -354,6 +423,9 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Project Snapshot
 {normalized['project_snapshot']}
 
+## Source Repo Intent
+{normalized['source_repo_intent']}
+
 ## Source Repo State
 {normalized['source_repo_state']}
 
@@ -408,11 +480,15 @@ def main() -> None:
     reports = collect_reports()
     progress_items = collect_progress_logs()
     source_state = collect_source_repo_state(Path(args.source_dir))
+    source_intent = collect_source_repo_intent(Path(args.source_dir))
     latest_workforce_state = summarize_latest_run(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
     normalized = {
-        "current_situation": render_current_situation(args.repo, source_state, latest_workforce_state),
+        "current_situation": render_current_situation(
+            args.repo, source_state, source_intent, latest_workforce_state
+        ),
         "project_snapshot": render_project_snapshot(args.repo, issues),
+        "source_repo_intent": render_source_repo_intent(source_intent),
         "source_repo_state": render_source_repo_state(source_state),
         "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
         "active_issues": render_active_issues(issues),
@@ -424,6 +500,7 @@ def main() -> None:
     for filename, content in [
         ("current_situation.md", normalized["current_situation"]),
         ("project_snapshot.md", normalized["project_snapshot"]),
+        ("source_repo_intent.md", normalized["source_repo_intent"]),
         ("source_repo_state.md", normalized["source_repo_state"]),
         ("latest_workforce_state.md", normalized["latest_workforce_state"]),
         ("active_issues.md", normalized["active_issues"]),

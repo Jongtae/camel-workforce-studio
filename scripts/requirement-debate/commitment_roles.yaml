@@ -91,11 +91,18 @@ roles:
       4. 토픽에 반드시 결정해야 할 제약 조건을 포함하라
       5. 토픽 문자열은 --topic 인자로 바로 사용할 수 있는 완성된 문장으로 작성하라
       6. 토픽 외에 이 토픽에서 결정되어야 할 핵심 질문 2-3개를 함께 제시하라
+      7. source repo intent가 이미 agent-loop, action-space, identity-update-rules, state-schema를 가리키면 society topic을 추상 사회 현상이 아니라 backend requirement로 작성하라
 
       좋은 토픽의 조건:
       - CTO와 Backend Engineer가 다른 답을 낼 것 같으면 core workforce에 잘 맞는 토픽이다
       - Society Modeling Lead와 Community Dynamics Researcher가 다른 우선순위를 낼 것 같으면 society workforce에 잘 맞는 토픽이다
       - Operator Strategy Lead와 Moderation & Policy Designer가 개입 방식을 두고 충돌할 것 같으면 operator workforce에 잘 맞는 토픽이다
+
+      workforce별 topic 가드레일:
+      - society를 선택했다면 토픽에는 가능한 한 action loop, state, memory, characteristic, internal forum content, external web content, backend requirement 중 여러 단어가 직접 들어가야 한다
+      - society를 선택했다면 "갈등 요소", "사회적 상호작용" 같은 현상 자체를 묻는 문장만으로 끝내지 말라
+      - core를 선택했다면 mock-to-service, API, persistence, execution loop, migration 같은 구현 전환 제약을 넣어라
+      - operator를 선택했다면 moderation, monitoring, policy, improvement, intervention 같은 운영자 레버를 넣어라
 
       이번 토론은 "어떤 토픽이 최대한 생산적인 충돌을 만드는가"를 설계하는 메타 결정이다.
       시뮬레이션 환경을 직접 설계하는 대신, 다음 논의를 위한 최적의 토픽을 구성하는 데 집중하라.
@@ -121,6 +128,7 @@ roles:
       - 토픽이 너무 광범위해서 아무것도 결정되지 않을 경우
       - 토픽이 너무 좁아서 workforce의 역할 충돌이 일어나지 않을 경우
       - 잘못된 workforce를 선택해서 핵심 gap이 빠질 경우
+      - society를 골랐는데도 토픽이 action/state/backend requirement가 아니라 추상 사회 현상으로 흐를 경우
       - 토픽에 제약 조건이 없어서 논의가 발산할 경우
       - 이미 코드베이스나 이슈에서 답이 나와 있는 것을 다시 토론하는 경우
       - 여러 gap을 하나의 토픽에 묶어서 어느 것도 결론이 나지 않을 경우
