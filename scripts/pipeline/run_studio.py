@@ -66,7 +66,12 @@ def main() -> None:
     parser.add_argument(
         "--create-issue",
         action="store_true",
-        help="선택된 workforce 결과를 대상 repo에 issue로 발급",
+        help="선택된 workforce 결과가 issue-ready면 issue draft를 준비",
+    )
+    parser.add_argument(
+        "--approve-issue",
+        action="store_true",
+        help="issue draft를 검토했다고 보고 실제 GitHub issue 생성을 승인",
     )
     parser.add_argument(
         "--issue-type",
@@ -165,6 +170,8 @@ def main() -> None:
         commitment_cmd.append("--run-next")
     if args.create_issue:
         commitment_cmd.extend(["--create-issue", "--issue-repo", args.repo, "--issue-type", args.issue_type])
+        if args.approve_issue:
+            commitment_cmd.append("--approve-issue")
         for label in args.issue_label:
             commitment_cmd.extend(["--issue-label", label])
         for assignee in args.issue_assignee:

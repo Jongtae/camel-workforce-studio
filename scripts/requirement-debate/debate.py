@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from workforce_artifacts import (
+    ArtifactBundle,
     append_run_ledger_entry,
     bullet_lines,
     build_handoff_markdown,
@@ -1332,6 +1333,95 @@ def create_sprint_issue_body(
     return "\n".join(lines).strip() + "\n"
 
 
+def write_issue_plan_preview(
+    artifacts: ArtifactBundle,
+    result_text: str,
+    workforce_key: str,
+    topic: str,
+    repo: str,
+    issue_type: str,
+    labels: Optional[list[str]] = None,
+    issue_assignees: Optional[list[str]] = None,
+    task_assignees: Optional[list[str]] = None,
+    milestone: Optional[str] = None,
+    project: Optional[str] = None,
+    epic_label: Optional[str] = None,
+    with_sprint: bool = False,
+    max_child_issues: int = 5,
+) -> Path:
+    preview_path = artifacts.run_dir / "issue_plan.md"
+    base_title = extract_issue_title(result_text)
+    lines = [
+        "# Issue Plan",
+        "",
+        f"- Target Repo: {repo}",
+        f"- Issue Type: {issue_type}",
+        f"- Source Workforce: {workforce_key}",
+        f"- Source Topic: {topic}",
+        f"- Labels: {', '.join(issue_labels_for_type(issue_type if issue_type in {'epic', 'bundle'} else 'task', labels, epic_label=epic_label))}",
+        f"- Milestone: {milestone or '(none)'}",
+        f"- Project: {project or '(none)'}",
+        f"- Approval Required: yes",
+        "",
+    ]
+    if issue_assignees:
+        lines.append(f"- Issue Assignees: {', '.join(issue_assignees)}")
+    if task_assignees:
+        lines.append(f"- Task Assignees: {', '.join(task_assignees)}")
+    if issue_type in {"single", "task", "epic", "sprint"}:
+        title_prefix = {
+            "single": "",
+            "task": "Task: ",
+            "epic": "Epic: ",
+            "sprint": "Sprint: ",
+        }[issue_type]
+        lines.extend(
+            [
+                "",
+                "## Planned Issue",
+                "",
+                f"- Title: {shorten_title(base_title, prefix=title_prefix) if title_prefix else base_title}",
+            ]
+        )
+    else:
+        task_specs = create_task_issue_specs(
+            result_text,
+            shorten_title(base_title, prefix="Epic: "),
+            max_child_issues=max_child_issues,
+            task_assignees=task_assignees,
+        )
+        lines.extend(
+            [
+                "",
+                "## Planned Epic",
+                "",
+                f"- Title: {shorten_title(base_title, prefix='Epic: ')}",
+                "",
+                "## Planned Child Tasks",
+                "",
+            ]
+        )
+        if task_specs:
+            for spec in task_specs:
+                assignee = spec["assignee"] or "(unassigned)"
+                lines.append(f"- {spec['order']}. {spec['title']} [{assignee}]")
+                lines.append(f"  Goal: {spec['goal']}")
+        else:
+            lines.append("- No child tasks were extracted.")
+        if with_sprint:
+            lines.extend(
+                [
+                    "",
+                    "## Planned Sprint Issue",
+                    "",
+                    f"- Title: {shorten_title(milestone or base_title, prefix='Sprint: ')}",
+                ]
+            )
+    lines.extend(["", "## Source Decision", "", result_text.strip(), ""])
+    preview_path.write_text("\n".join(lines), encoding="utf-8")
+    return preview_path
+
+
 def create_github_issues(
     result_text: str,
     workforce_key: str,
@@ -1485,6 +1575,7 @@ def run_workforce(
     model_name: str = "gpt-4o-mini",
     rounds: int = 3,
     create_issue: bool = False,
+    approve_issue: bool = False,
     issue_repo: Optional[str] = None,
     issue_type: str = "task",
     issue_labels: Optional[list[str]] = None,
@@ -1618,8 +1709,8 @@ def run_workforce(
             issue_type=issue_type,
         )
         if ready_for_issue:
-            print("📌 GitHub Issue 생성 중...")
-            issue_output = create_github_issues(
+            preview_path = write_issue_plan_preview(
+                artifacts=artifacts,
                 result_text=final_result,
                 workforce_key=workforce_key,
                 topic=resolved_topic,
@@ -1634,21 +1725,41 @@ def run_workforce(
                 with_sprint=with_sprint,
                 max_child_issues=max_child_issues,
             )
-            if issue_output:
-                issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
-                append_run_ledger_entry(
-                    artifacts=artifacts,
+            print(f"📝 Issue draft 저장: {preview_path}")
+            if not approve_issue:
+                print("⏸️ GitHub 발급은 보류했습니다. draft를 검토한 뒤 --approve-issue로 승인해 주세요.")
+            else:
+                print("📌 GitHub Issue 생성 중...")
+                issue_output = create_github_issues(
+                    result_text=final_result,
                     workforce_key=workforce_key,
-                    scenario_label=scenario["label"],
                     topic=resolved_topic,
                     repo=issue_repo or "Jongtae/AI-Fashion-Forum",
                     issue_type=issue_type,
-                    issue_urls=issue_urls,
-                    rounds=len(round_results),
                     labels=issue_labels,
+                    issue_assignees=issue_assignees,
+                    task_assignees=task_assignees,
                     milestone=issue_milestone,
+                    project=issue_project,
+                    epic_label=epic_label,
+                    with_sprint=with_sprint,
+                    max_child_issues=max_child_issues,
                 )
-                print(f"  ✓ Issue 생성 완료:\n{issue_output}")
+                if issue_output:
+                    issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
+                    append_run_ledger_entry(
+                        artifacts=artifacts,
+                        workforce_key=workforce_key,
+                        scenario_label=scenario["label"],
+                        topic=resolved_topic,
+                        repo=issue_repo or "Jongtae/AI-Fashion-Forum",
+                        issue_type=issue_type,
+                        issue_urls=issue_urls,
+                        rounds=len(round_results),
+                        labels=issue_labels,
+                        milestone=issue_milestone,
+                    )
+                    print(f"  ✓ Issue 생성 완료:\n{issue_output}")
         else:
             print("⏭️ Issue 발급 건너뜀: 아직 작업 단위로 굳지 않았습니다.")
             for reason in readiness_reasons:
@@ -1669,6 +1780,7 @@ def run_workforce(
                 model_name=model_name,
                 rounds=rounds,
                 create_issue=create_issue,
+                approve_issue=approve_issue,
                 issue_repo=issue_repo,
                 issue_type=issue_type,
                 issue_labels=issue_labels,
@@ -1728,7 +1840,12 @@ def main(argv=None):
     parser.add_argument(
         "--create-issue",
         action="store_true",
-        help="토론 결과를 GitHub Issue로 자동 등록",
+        help="토론 결과가 issue-ready면 issue draft를 만들고, 승인 시 GitHub Issue로 등록",
+    )
+    parser.add_argument(
+        "--approve-issue",
+        action="store_true",
+        help="issue draft를 검토했다고 보고 실제 GitHub Issue 생성을 승인",
     )
     parser.add_argument(
         "--issue-repo",
@@ -1829,6 +1946,7 @@ def main(argv=None):
         model_name=args.model,
         rounds=args.rounds,
         create_issue=args.create_issue,
+        approve_issue=args.approve_issue,
         issue_repo=args.issue_repo,
         issue_type=args.issue_type,
         issue_labels=args.issue_label,

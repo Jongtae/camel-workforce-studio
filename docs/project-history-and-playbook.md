@@ -37,6 +37,7 @@
 - `commitment` 단순화: CAMEL workforce 대신 single decision agent로 변경
 - run ledger 도입: 어떤 workforce run이 어떤 GitHub issue를 만들었는지 `context/history/run-ledger.jsonl`에 기록
 - issue readiness gate 도입: `--create-issue`여도 제목, 요약, 완료 기준, 다음 액션이 충분하지 않으면 발급을 건너뜀
+- 실전 운영 모드로 조정: `--create-issue`는 먼저 `issue_plan.md` draft를 저장하고, 실제 GitHub 발급은 `--approve-issue`를 줬을 때만 수행
 
 ## 3. 왜 CAMEL memory보다 명시적 handoff를 택했나
 

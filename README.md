@@ -117,6 +117,8 @@ python3 scripts/pipeline/run_studio.py \
   --with-sprint
 ```
 
+실제 GitHub 발급까지 하려면 검토 후 `--approve-issue`를 추가합니다.
+
 이 모드는 선택된 workforce 결과를 기준으로 아래를 생성할 수 있습니다.
 
 - `single` 또는 `task`: 단일 실행 issue
@@ -153,6 +155,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - `next_questions.md`: 후속 논의 질문
 - `round_summary.md`: 라운드별 정리
 - `metadata.json`: 실행 메타데이터
+- `issue_plan.md`: issue-ready일 때 생성되는 발급 초안
 - `context/history/run-ledger.jsonl`: 실행과 발급된 issue를 연결하는 ledger
 - `context/normalized/active_pull_requests.md`: 현재 open PR 정규화
 - `context/normalized/recent_merged_pull_requests.md`: 최근 merged PR 정규화
@@ -180,7 +183,9 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - issue를 발급하면 해당 run과 issue URL/번호가 `context/history/run-ledger.jsonl`에 기록됩니다.
 - 다음 `build_context.py` 실행은 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`에 반영합니다.
 - commitment와 각 workforce는 issue뿐 아니라 open PR과 최근 merged PR도 context source로 읽습니다.
-- `--create-issue`를 줘도 모든 결과를 바로 발급하지는 않습니다. `Issue Title`, `Summary`, `Acceptance Criteria`, `Next Actions`가 충분히 갖춰져 issue-ready 기준을 넘을 때만 생성합니다.
+- `--create-issue`를 주면 먼저 `issue_plan.md` draft를 만듭니다.
+- 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행합니다.
+- `Issue Title`, `Summary`, `Acceptance Criteria`, `Next Actions`가 충분히 갖춰져 issue-ready 기준을 넘을 때만 draft/생성이 진행됩니다.
 
 ## Shared Memory Policy
 
