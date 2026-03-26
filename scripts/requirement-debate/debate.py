@@ -70,6 +70,7 @@ WORKER_OUTPUT_RULES = """공통 출력 규칙:
 - 반드시 한국어로만 작성한다.
 - 반드시 일반 텍스트만 사용한다.
 - JSON, Python dict, YAML, 마크다운 표를 쓰지 않는다.
+- diagram, visual representation, 도식 같은 요구가 있어도 텍스트 헤더와 불릿으로 대체한다.
 - "다이어그램을 그리겠다" 같은 계획 문장이 아니라 지금 제출 가능한 요구사항 내용만 쓴다.
 - 불필요한 서론 없이 바로 본문을 작성한다.
 - 패션 취향 분화나 특정 현상 하나를 최상위 목표처럼 다루지 않는다.
@@ -196,11 +197,13 @@ TASK_AGENT_SYSTEM_PROMPT = """당신은 Workforce 태스크 라우터입니다.
 - worker id는 반드시 유효한 후보 중에서만 선택한다.
 - worker가 없는 경우 임의 값이나 none을 쓰지 않는다.
 - 태스크가 충분히 구체적이지 않으면 더 구체적인 텍스트 태스크로 재작성한다.
+- diagram, visual representation, 도식 같은 산출물을 요구하는 태스크는 텍스트 헤더/불릿 기반 설명 태스크로 재작성한다.
 - society workforce 태스크를 재작성할 때는 action loop만 남기지 말고 state model, state transitions, content consumption, required backend artifacts를 함께 보존하라.
 - society workforce 태스크에는 가능하면 post/comment/react/lurk/silence와 internal forum content/external web content를 직접 포함하라.
 - society workforce 태스크에는 가능하면 각 action이 어떤 state를 읽고 어떤 state를 쓰며 어떤 artifact를 남기는지도 포함하라.
 - society workforce 태스크에서 action loop를 요구할 때는 가능하면 정확한 필드명 Trigger Condition, State Read, State Write, Successful Outcome, Artifact를 유지하라.
 - society workforce 태스크에서 required backend artifacts를 언급할 때는 trace/snapshot/event/forum artifact의 필요성까지 남겨라.
+- society workforce 태스크에서 Required Backend Artifacts를 요구할 때는 가능하면 Connected Action, Captured State Change, Why It Is Operationally Required 같은 필드 구조를 유지하라.
 - operator workforce 태스크에는 moderation/monitoring/policy/improvement 중 최소 두 가지 이상을 남겨라.
 - core workforce 태스크에는 mock-to-service/API/migration/execution loop 중 최소 두 가지 이상을 남겨라.
 """
@@ -545,8 +548,10 @@ SCENARIOS = {
 - Action Loop에서는 반드시 아래 필드명을 그대로 사용하라: Trigger Condition, State Read, State Write, Successful Outcome, Artifact
 - Action Loop에서는 post/comment/react/lurk/silence 각각을 별도 소제목으로 나눠라
 - Required Backend Artifacts에서는 각 artifact가 왜 필요한지 적어라
+- Required Backend Artifacts에서는 trace / snapshot / event / stored action / forum artifact 각각에 대해, 어떤 action/state와 연결되는지와 왜 운영적으로 필수인지 적어라
 - State Transitions에서는 state change가 다음 행동 선택에 어떤 영향을 주는지 적어라
 - State Model에는 characteristic, belief, memory, mutable axes, relationship state를 모두 포함하라
+- Identity & Memory Architect 관련 응답에서는 State Model, Memory Writeback Rules, Action Selection Links, Content Consumption Merge, Replayable Backend Requirements를 빠뜨리지 말라
 """,
         "coordinator_prompt": COMMON_COORDINATOR_PROMPT + "\n추가 규칙: 이번 토론은 forum 안에서 action하는 AI agent backend 요구사항에 집중한다. 추상적인 사회 현상보다 action loop, state schema, memory writeback, observable trace를 우선한다.\n",
         "final_prompt": COMMON_FINAL_SYNTHESIZER_PROMPT + "\n추가 규칙: 최종 결과는 AI agent backend가 구현해야 할 action loop, state/memory requirement, observable trace, forum artifact 생성을 우선 정리하라.\n",

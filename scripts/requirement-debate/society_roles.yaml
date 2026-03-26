@@ -76,8 +76,30 @@ roles:
       - 두 입력이 같은 state model에 어떻게 합쳐지는가
 
       ## Required Backend Artifacts
-      - trace / snapshot / event / stored action / forum artifact
-      - 각 artifact가 왜 필요한지 한 줄씩 설명
+      ### trace
+      - Connected Action:
+      - Captured State Change:
+      - Why It Is Operationally Required:
+
+      ### snapshot
+      - Captured Moment:
+      - Stored State Fields:
+      - Why It Is Operationally Required:
+
+      ### event
+      - Triggered By:
+      - Payload:
+      - Why It Is Operationally Required:
+
+      ### stored action
+      - Stores:
+      - Read Back In:
+      - Why It Is Operationally Required:
+
+      ### forum artifact
+      - Artifact Type:
+      - Produced By:
+      - Why It Is Operationally Required:
 
       규칙:
       - 각 섹션을 반드시 채워라
@@ -87,7 +109,8 @@ roles:
       - state transition을 최소 3개 이상 bullet로 적어라
       - 태스크가 action loop만 묻더라도 State Model, State Transitions, Content Consumption, Required Backend Artifacts를 생략하지 말라
       - 각 action마다 위 5개 필드를 모두 채워라
-      - 각 artifact bullet에는 necessity를 함께 적어라
+      - Required Backend Artifacts에서는 반드시 위 템플릿의 정확한 필드명을 그대로 사용하라
+      - "왜 필요한가"를 일반론으로 쓰지 말고, 어떤 action/state/memory 운영을 위해 필수인지 적어라
       - state transition은 "무엇이 변하고, 그래서 다음에 어떤 행동이 더 가능해지는가"까지 적어라
 
       한국어로 답변하세요.
@@ -106,6 +129,48 @@ roles:
       3. 관심사 벡터, belief 벡터, mutable axes, self narrative가 어떤 action 선택에 영향을 주는지 설명하라
       4. forum 내부 콘텐츠와 외부 콘텐츠 소비가 같은 state model에 어떻게 합쳐지는지 설명하라
       5. replay 가능한 이벤트, trace, snapshot 기준으로 backend requirement를 정리하라
+
+      반드시 아래 형식으로 답하라.
+
+      ## State Model
+      - characteristic:
+      - belief:
+      - memory:
+      - mutable axes:
+      - relationship state:
+      - self narrative:
+
+      ## Memory Writeback Rules
+      - Input Event:
+      - Memory Write:
+      - State Change:
+      - Next Action Bias:
+
+      ## Action Selection Links
+      - post:
+      - comment:
+      - react:
+      - lurk:
+      - silence:
+
+      ## Content Consumption Merge
+      - forum input:
+      - external web input:
+      - merged memory path:
+      - resulting state update:
+
+      ## Replayable Backend Requirements
+      - trace:
+      - snapshot:
+      - event:
+      - stored action:
+
+      규칙:
+      - 위 헤더와 필드명을 그대로 유지하라
+      - visual representation, diagram, 도식 요구가 있어도 텍스트 헤더와 불릿으로만 답하라
+      - memory writeback rule은 최소 3개 이상 적어라
+      - 각 Memory Writeback Rule에는 반드시 Input Event / Memory Write / State Change / Next Action Bias를 모두 적어라
+      - action selection link에서는 각 action이 어떤 state field를 읽는지까지 포함하라
 
       한국어로 답변하세요.
 
