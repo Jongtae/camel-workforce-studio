@@ -47,8 +47,8 @@ def default_source_dir() -> str:
     return str(candidate)
 
 
-def run_gh_json(repo: str, args: List[str]) -> list:
-    cmd = ["gh", "issue", "list", "--repo", repo, *args]
+def run_gh_json(command: List[str]) -> object:
+    cmd = ["gh", *command]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         return []
@@ -72,8 +72,11 @@ def run_git_command(repo_dir: Path, args: List[str]) -> str:
 
 def collect_github_issues(repo: str) -> list:
     issues = run_gh_json(
-        repo,
         [
+            "issue",
+            "list",
+            "--repo",
+            repo,
             "--state",
             "open",
             "--limit",
@@ -88,6 +91,52 @@ def collect_github_issues(repo: str) -> list:
         encoding="utf-8",
     )
     return issues
+
+
+def collect_github_pull_requests(repo: str) -> dict:
+    open_prs = run_gh_json(
+        [
+            "pr",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "open",
+            "--limit",
+            "30",
+            "--json",
+            "number,title,body,labels,assignees,updatedAt,url,baseRefName,headRefName,isDraft,author",
+        ]
+    )
+    merged_prs = run_gh_json(
+        [
+            "pr",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "merged",
+            "--limit",
+            "20",
+            "--json",
+            "number,title,body,labels,assignees,updatedAt,url,baseRefName,headRefName,mergedAt,author",
+        ]
+    )
+
+    open_prs_path = RAW_DIR / "github" / "open_prs.json"
+    open_prs_path.write_text(
+        json.dumps(open_prs, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    merged_prs_path = RAW_DIR / "github" / "merged_prs.json"
+    merged_prs_path.write_text(
+        json.dumps(merged_prs, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "open": open_prs if isinstance(open_prs, list) else [],
+        "merged": merged_prs if isinstance(merged_prs, list) else [],
+    }
 
 
 def collect_issue_snapshot(repo: str, issue_number: int) -> dict:
@@ -275,13 +324,17 @@ def trim(text: str, max_lines: int = 12) -> str:
     return "\n".join(lines[:max_lines]).strip()
 
 
-def render_project_snapshot(repo: str, issues: list) -> str:
+def render_project_snapshot(repo: str, issues: list, pull_requests: dict) -> str:
+    open_prs = pull_requests.get("open", [])
+    merged_prs = pull_requests.get("merged", [])
     return (
         "# Project Snapshot\n\n"
         f"- Source repository: {repo}\n"
         "- This workspace acts as a companion decision studio for AI-Fashion-Forum.\n"
         "- Workforce runs are expected to consume normalized context rather than raw issue or report dumps.\n"
         f"- Open GitHub issues collected for this build: {len(issues)}\n"
+        f"- Open GitHub PRs collected for this build: {len(open_prs)}\n"
+        f"- Recent merged GitHub PRs collected for this build: {len(merged_prs)}\n"
     )
 
 
@@ -300,17 +353,27 @@ def render_source_repo_intent(source_intent: dict) -> str:
 
 
 def render_current_situation(
-    repo: str, source_state: dict, source_intent: dict, latest_workforce_state: str
+    repo: str,
+    source_state: dict,
+    source_intent: dict,
+    latest_workforce_state: str,
+    pull_requests: dict,
 ) -> str:
     latest_summary = latest_workforce_state.strip() or "- No previous workforce state found."
     recent_commit_subjects = [
         commit["subject"] for commit in source_state.get("recent_commits", [])[:3]
     ]
+    open_prs = pull_requests.get("open", [])
+    merged_prs = pull_requests.get("merged", [])
+    open_pr_titles = [pr.get("title", "") for pr in open_prs[:3] if pr.get("title")]
+    merged_pr_titles = [pr.get("title", "") for pr in merged_prs[:3] if pr.get("title")]
     lines = [
         "# Current Situation",
         "",
         f"- GitHub repository target: {repo}",
         f"- Local source repository path: {source_state.get('path', '')}",
+        f"- Open PR count collected: {len(open_prs)}",
+        f"- Recent merged PR count collected: {len(merged_prs)}",
     ]
     if not source_state.get("exists"):
         lines.append("- Local source repository was not found, so git-based situation checks are unavailable.")
@@ -324,6 +387,8 @@ def render_current_situation(
                 "## Current Signals",
                 f"- Working tree is {'clean' if not source_state.get('changed_files') else 'dirty'}",
                 f"- Latest commit directions: {', '.join(recent_commit_subjects) if recent_commit_subjects else 'none'}",
+                f"- Open PR directions: {', '.join(open_pr_titles) if open_pr_titles else 'none'}",
+                f"- Recent merged PR directions: {', '.join(merged_pr_titles) if merged_pr_titles else 'none'}",
                 "",
                 "## Already Decided Or Suggested",
                 "- Latest workforce state below is the current studio-level baseline unless explicitly challenged.",
@@ -339,6 +404,8 @@ def render_current_situation(
                 "",
                 "## Current Blocker Heuristic",
                 "- If the working tree is clean and recent commits landed, the blocker is more likely a missing next decision than missing code edits.",
+                "- If open PRs already encode implementation intent, commitment should treat them as near-term execution signals rather than ignoring them.",
+                "- If recently merged PRs materially changed the backend or simulation loop, commitment should prefer follow-up work that closes the new gap they exposed.",
                 "- If latest workforce state already suggests a next workforce/topic, commitment should either confirm it or explain why it must change.",
                 "- For society routing, abstract social-conflict topics are lower priority than agent backend/state/action/content-consumption requirements when the source repo already exposes agent-loop style implementation signals.",
             ]
@@ -400,6 +467,62 @@ def render_active_issues(issues: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def render_active_pull_requests(pull_requests: dict) -> str:
+    lines = ["# Active Pull Requests", ""]
+    open_prs = pull_requests.get("open", [])
+    if not open_prs:
+        lines.append("- No open PRs were collected.")
+        return "\n".join(lines) + "\n"
+
+    for pr in open_prs:
+        labels = ", ".join(label["name"] for label in pr.get("labels", [])) or "no labels"
+        assignees = ", ".join(
+            assignee.get("login", "") for assignee in pr.get("assignees", [])
+        ) or "unassigned"
+        author = (pr.get("author") or {}).get("login", "unknown")
+        lines.extend(
+            [
+                f"## PR #{pr['number']} {pr['title']}",
+                f"- Updated: {pr.get('updatedAt', '')}",
+                f"- Author: {author}",
+                f"- Assignees: {assignees}",
+                f"- Labels: {labels}",
+                f"- Branch: {pr.get('headRefName', '')} -> {pr.get('baseRefName', '')}",
+                f"- Draft: {'yes' if pr.get('isDraft') else 'no'}",
+                f"- URL: {pr.get('url', '')}",
+                trim(pr.get("body", "") or "No body provided.", max_lines=8) or "No body provided.",
+                "",
+            ]
+        )
+    return "\n".join(lines).strip() + "\n"
+
+
+def render_recent_merged_pull_requests(pull_requests: dict) -> str:
+    lines = ["# Recent Merged Pull Requests", ""]
+    merged_prs = pull_requests.get("merged", [])
+    if not merged_prs:
+        lines.append("- No recently merged PRs were collected.")
+        return "\n".join(lines) + "\n"
+
+    for pr in merged_prs[:10]:
+        labels = ", ".join(label["name"] for label in pr.get("labels", [])) or "no labels"
+        author = (pr.get("author") or {}).get("login", "unknown")
+        lines.extend(
+            [
+                f"## PR #{pr['number']} {pr['title']}",
+                f"- Merged At: {pr.get('mergedAt', '')}",
+                f"- Updated: {pr.get('updatedAt', '')}",
+                f"- Author: {author}",
+                f"- Labels: {labels}",
+                f"- Branch: {pr.get('headRefName', '')} -> {pr.get('baseRefName', '')}",
+                f"- URL: {pr.get('url', '')}",
+                trim(pr.get("body", "") or "No body provided.", max_lines=6) or "No body provided.",
+                "",
+            ]
+        )
+    return "\n".join(lines).strip() + "\n"
+
+
 def render_recent_progress(progress_items: list) -> str:
     lines = ["# Recent Progress", ""]
     if not progress_items:
@@ -435,14 +558,17 @@ def render_external_report_briefs(reports: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
-def render_open_questions(issues: list, progress_items: list) -> str:
+def render_open_questions(issues: list, progress_items: list, pull_requests: dict) -> str:
     lines = ["# Open Questions", ""]
-    if not issues and not progress_items:
+    open_prs = pull_requests.get("open", [])
+    if not issues and not progress_items and not open_prs:
         lines.append("- No structured open questions were found. Add issue bodies or progress logs with explicit gaps.")
         return "\n".join(lines) + "\n"
 
     for issue in issues[:10]:
         lines.append(f"- Issue #{issue['number']}에서 아직 풀리지 않은 결정: {issue['title']}")
+    for pr in open_prs[:8]:
+        lines.append(f"- PR #{pr['number']}가 암시하는 후속 결정: {pr['title']}")
     if progress_items:
         lines.append("- Progress logs에서 드러난 검증 공백과 미해결 항목을 다음 workforce에서 정리해야 한다.")
     return "\n".join(lines).strip() + "\n"
@@ -529,6 +655,12 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Active Issues
 {normalized['active_issues']}
 
+## Active Pull Requests
+{normalized['active_pull_requests']}
+
+## Recent Merged Pull Requests
+{normalized['recent_merged_pull_requests']}
+
 ## Recent Progress
 {normalized['recent_progress']}
 
@@ -571,6 +703,7 @@ def main() -> None:
     ensure_dirs()
 
     issues = collect_github_issues(args.repo)
+    pull_requests = collect_github_pull_requests(args.repo)
     reports = collect_reports()
     progress_items = collect_progress_logs()
     source_state = collect_source_repo_state(Path(args.source_dir))
@@ -580,17 +713,19 @@ def main() -> None:
 
     normalized = {
         "current_situation": render_current_situation(
-            args.repo, source_state, source_intent, latest_workforce_state
+            args.repo, source_state, source_intent, latest_workforce_state, pull_requests
         ),
-        "project_snapshot": render_project_snapshot(args.repo, issues),
+        "project_snapshot": render_project_snapshot(args.repo, issues, pull_requests),
         "source_repo_intent": render_source_repo_intent(source_intent),
         "source_repo_state": render_source_repo_state(source_state),
         "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
         "issue_execution_history": render_issue_execution_history(issue_execution_history),
         "active_issues": render_active_issues(issues),
+        "active_pull_requests": render_active_pull_requests(pull_requests),
+        "recent_merged_pull_requests": render_recent_merged_pull_requests(pull_requests),
         "recent_progress": render_recent_progress(progress_items),
         "external_report_briefs": render_external_report_briefs(reports),
-        "open_questions": render_open_questions(issues, progress_items),
+        "open_questions": render_open_questions(issues, progress_items, pull_requests),
     }
 
     for filename, content in [
@@ -601,6 +736,8 @@ def main() -> None:
         ("latest_workforce_state.md", normalized["latest_workforce_state"]),
         ("issue_execution_history.md", normalized["issue_execution_history"]),
         ("active_issues.md", normalized["active_issues"]),
+        ("active_pull_requests.md", normalized["active_pull_requests"]),
+        ("recent_merged_pull_requests.md", normalized["recent_merged_pull_requests"]),
         ("recent_progress.md", normalized["recent_progress"]),
         ("external_report_briefs.md", normalized["external_report_briefs"]),
         ("open_questions.md", normalized["open_questions"]),

@@ -1,6 +1,6 @@
 # camel-workforce-studio
 
-`camel-workforce-studio`는 범용 CAMEL 데모 레포가 아니라, [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision workspace입니다. 이 저장소는 제품 본체를 구현하는 대신, GitHub issue, 외부 리포트, progress log, 이전 논의 결과를 정규화해서 여러 workforce 토론으로 넘기고, 그 결과를 다시 다음 논의나 GitHub handoff로 연결하는 역할을 맡습니다.
+`camel-workforce-studio`는 범용 CAMEL 데모 레포가 아니라, [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision workspace입니다. 이 저장소는 제품 본체를 구현하는 대신, GitHub issue, GitHub PR, 외부 리포트, progress log, 이전 논의 결과를 정규화해서 여러 workforce 토론으로 넘기고, 그 결과를 다시 다음 논의나 GitHub handoff로 연결하는 역할을 맡습니다.
 
 핵심 흐름은 `Context Builder -> Commitment/Development/Operator/Society Workforce -> Handoff`입니다. 즉 topic 하나만 던지는 토론기보다, “지금 무엇이 막혀 있고 다음에 어느 workforce가 무엇을 결정해야 하는가”를 구조적으로 다루는 companion repo에 가깝습니다.
 
@@ -14,7 +14,7 @@
 
 ## Operating Flow
 
-1. `scripts/context-builder/build_context.py`가 GitHub issue, 외부 리포트, progress log를 읽어 `context/workflow-inputs/*.md`를 만듭니다.
+1. `scripts/context-builder/build_context.py`가 GitHub issue, GitHub PR, 외부 리포트, progress log를 읽어 `context/workflow-inputs/*.md`를 만듭니다.
 2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다.
 3. 선택된 workforce가 handoff와 context pack을 함께 읽고 토론합니다.
 4. 각 실행은 `decision.md`, `handoff.md`, `next_questions.md`, `round_summary.md`, `full_report.md`를 남깁니다.
@@ -97,7 +97,7 @@ python3 scripts/pipeline/run_studio.py \
 이 모드는 아래를 순서대로 수행합니다.
 
 - AI-Fashion-Forum 로컬 repo의 git 상태, 최근 커밋, 변경 파일을 읽음
-- GitHub issue와 로컬 report/progress를 합쳐 context pack 생성
+- GitHub issue, open/merged PR, 로컬 report/progress를 합쳐 context pack 생성
 - 최신 workforce handoff가 있으면 자동으로 commitment 입력에 포함
 - commitment 실행 후 선택된 다음 workforce까지 연쇄 실행
 
@@ -154,6 +154,8 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - `round_summary.md`: 라운드별 정리
 - `metadata.json`: 실행 메타데이터
 - `context/history/run-ledger.jsonl`: 실행과 발급된 issue를 연결하는 ledger
+- `context/normalized/active_pull_requests.md`: 현재 open PR 정규화
+- `context/normalized/recent_merged_pull_requests.md`: 최근 merged PR 정규화
 
 세부 규약은 [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md) 에 정리되어 있습니다.
 
@@ -177,6 +179,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - child task의 처리 순서는 `Next Actions` 순서를 따릅니다.
 - issue를 발급하면 해당 run과 issue URL/번호가 `context/history/run-ledger.jsonl`에 기록됩니다.
 - 다음 `build_context.py` 실행은 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`에 반영합니다.
+- commitment와 각 workforce는 issue뿐 아니라 open PR과 최근 merged PR도 context source로 읽습니다.
 - `--create-issue`를 줘도 모든 결과를 바로 발급하지는 않습니다. `Issue Title`, `Summary`, `Acceptance Criteria`, `Next Actions`가 충분히 갖춰져 issue-ready 기준을 넘을 때만 생성합니다.
 
 ## Shared Memory Policy
@@ -185,7 +188,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 
 - 기본 진실 원천: `handoff.md`, `decision.md`, `context/workflow-inputs/*.md`
 - 선택적 런타임 보조: `--share-memory`
-- 아직 기본 채택하지 않는 이유: 장기 컨텍스트는 CAMEL 내부 memory보다 GitHub issue, reports, progress log, handoff 문서가 더 투명하고 재검토 가능하기 때문입니다.
+- 아직 기본 채택하지 않는 이유: 장기 컨텍스트는 CAMEL 내부 memory보다 GitHub issue, GitHub PR, reports, progress log, handoff 문서가 더 투명하고 재검토 가능하기 때문입니다.
 
 자세한 평가는 [docs/shared-memory-evaluation.md](docs/shared-memory-evaluation.md) 에 있습니다.
 
@@ -206,7 +209,7 @@ GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 
 자동화하는 것:
 - source repo 상태 읽기
-- GitHub issue / report / progress 수집
+- GitHub issue / PR / report / progress 수집
 - latest handoff 자동 포함
 - commitment 실행과 next workforce 체이닝
 - 표준 산출물 저장

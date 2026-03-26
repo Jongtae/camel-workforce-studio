@@ -10,6 +10,7 @@
 핵심 문제는 다음 세 가지였다.
 
 - GitHub issue
+- GitHub PR
 - external report
 - progress log
 
@@ -31,7 +32,7 @@
 이후 실제 운영에 맞추기 위해 다음 변화가 들어갔다.
 
 - 표준 산출물 도입: `decision.md`, `handoff.md`, `next_questions.md`, `round_summary.md`, `full_report.md`
-- `Context Builder` 도입: GitHub / reports / progress / source repo 상태를 정규화
+- `Context Builder` 도입: GitHub issue / PR / reports / progress / source repo 상태를 정규화
 - `run_studio.py` 도입: context build + commitment + next workforce 체이닝
 - `commitment` 단순화: CAMEL workforce 대신 single decision agent로 변경
 - run ledger 도입: 어떤 workforce run이 어떤 GitHub issue를 만들었는지 `context/history/run-ledger.jsonl`에 기록
@@ -48,6 +49,7 @@
 - `handoff.md`
 - `context/workflow-inputs/*.md`
 - GitHub issues
+- GitHub PRs
 - external reports
 - progress logs
 

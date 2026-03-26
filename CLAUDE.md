@@ -63,7 +63,7 @@
 2. `scripts/requirement-debate/outputs/*/decision.md`
 3. `scripts/requirement-debate/outputs/*/handoff.md`
 4. AI-Fashion-Forum source repo 상태
-5. GitHub issue / report / progress log
+5. GitHub issue / PR / report / progress log
 
 ## Standard Operating Loop
 
@@ -112,6 +112,7 @@ sprint issue에는 담당자별 처리 순서가 같이 기록된다.
 
 issue를 발급한 run은 반드시 `context/history/run-ledger.jsonl`에 기록되어야 한다.
 다음 `build_context.py` 실행은 이 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`로 다시 정규화해야 한다.
+같은 실행에서 open PR과 최근 merged PR도 `context/normalized/active_pull_requests.md`, `context/normalized/recent_merged_pull_requests.md`로 정규화해야 한다.
 
 ## Society Quality Bar
 

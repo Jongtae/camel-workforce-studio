@@ -6,7 +6,7 @@ __pycache__/
 *.egg-info/
 
 scripts/requirement-debate/outputs/
-context/raw/github/issues.json
+context/raw/github/*.json
 context/history/*.jsonl
 context/normalized/
 context/workflow-inputs/
