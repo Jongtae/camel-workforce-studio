@@ -201,7 +201,7 @@ TASK_AGENT_SYSTEM_PROMPT = """당신은 Workforce 태스크 라우터입니다.
 - society workforce 태스크를 재작성할 때는 action loop만 남기지 말고 state model, state transitions, content consumption, required backend artifacts를 함께 보존하라.
 - society workforce 태스크에는 가능하면 post/comment/react/lurk/silence와 internal forum content/external web content를 직접 포함하라.
 - society workforce 태스크에는 가능하면 각 action이 어떤 state를 읽고 어떤 state를 쓰며 어떤 artifact를 남기는지도 포함하라.
-- society workforce 태스크에서 action loop를 요구할 때는 가능하면 정확한 필드명 Trigger Condition, State Read, State Write, Successful Outcome, Artifact를 유지하라.
+- society workforce 태스크에서 action loop를 요구할 때는 가능하면 정확한 필드명 Trigger Condition, State Read, State Write, Example State Transition A, Example State Transition B, Successful Outcome, Success Metric, Artifact를 유지하라.
 - society workforce 태스크에서 required backend artifacts를 언급할 때는 trace/snapshot/event/forum artifact의 필요성까지 남겨라.
 - society workforce 태스크에서 Required Backend Artifacts를 요구할 때는 가능하면 Connected Action, Captured State Change, Why It Is Operationally Required 같은 필드 구조를 유지하라.
 - operator workforce 태스크에는 moderation/monitoring/policy/improvement 중 최소 두 가지 이상을 남겨라.
@@ -545,13 +545,17 @@ SCENARIOS = {
 - forum 내부 콘텐츠 소비와 외부 web 콘텐츠 소비가 같은 characteristic 진화 루프에 어떻게 연결되는지 구체적으로 적어라
 - 단순 추천 앱 기능 논의나 커뮤니티 일반론으로 축소하지 말라
 - Action Loop, State Model, State Transitions, Content Consumption, Required Backend Artifacts를 빠뜨리지 말라
-- Action Loop에서는 반드시 아래 필드명을 그대로 사용하라: Trigger Condition, State Read, State Write, Successful Outcome, Artifact
+- Action Loop에서는 반드시 아래 필드명을 그대로 사용하라: Trigger Condition, State Read, State Write, Example State Transition A, Example State Transition B, Successful Outcome, Success Metric, Artifact
 - Action Loop에서는 post/comment/react/lurk/silence 각각을 별도 소제목으로 나눠라
+- Example State Transition A/B에는 이 action이 어떤 state를 바꾸고 다음 action bias를 어떻게 만드는지 서로 다른 예시로 적어라
+- Success Metric에는 포럼에서 관찰 가능한 성공 기준을 적어라
 - Required Backend Artifacts에서는 각 artifact가 왜 필요한지 적어라
 - Required Backend Artifacts에서는 trace / snapshot / event / stored action / forum artifact 각각에 대해, 어떤 action/state와 연결되는지와 왜 운영적으로 필수인지 적어라
 - State Transitions에서는 state change가 다음 행동 선택에 어떤 영향을 주는지 적어라
 - State Model에는 characteristic, belief, memory, mutable axes, relationship state를 모두 포함하라
 - Identity & Memory Architect 관련 응답에서는 State Model, Memory Writeback Rules, Action Selection Links, Content Consumption Merge, Replayable Backend Requirements를 빠뜨리지 말라
+- Identity & Memory Architect 관련 응답에서는 각 state field가 어떤 행동 결과를 만들고, 각 action이 어떤 state를 읽어 어떤 bias를 만드는지까지 적어라
+- Identity & Memory Architect 관련 응답에서는 각 state field마다 어떤 trace/snapshot/event/stored action이 필요한지도 적어라
 """,
         "coordinator_prompt": COMMON_COORDINATOR_PROMPT + "\n추가 규칙: 이번 토론은 forum 안에서 action하는 AI agent backend 요구사항에 집중한다. 추상적인 사회 현상보다 action loop, state schema, memory writeback, observable trace를 우선한다.\n",
         "final_prompt": COMMON_FINAL_SYNTHESIZER_PROMPT + "\n추가 규칙: 최종 결과는 AI agent backend가 구현해야 할 action loop, state/memory requirement, observable trace, forum artifact 생성을 우선 정리하라.\n",
