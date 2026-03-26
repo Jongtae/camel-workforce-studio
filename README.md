@@ -177,6 +177,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - child task의 처리 순서는 `Next Actions` 순서를 따릅니다.
 - issue를 발급하면 해당 run과 issue URL/번호가 `context/history/run-ledger.jsonl`에 기록됩니다.
 - 다음 `build_context.py` 실행은 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`에 반영합니다.
+- `--create-issue`를 줘도 모든 결과를 바로 발급하지는 않습니다. `Issue Title`, `Summary`, `Acceptance Criteria`, `Next Actions`가 충분히 갖춰져 issue-ready 기준을 넘을 때만 생성합니다.
 
 ## Shared Memory Policy
 

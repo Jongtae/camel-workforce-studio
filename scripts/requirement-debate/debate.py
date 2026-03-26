@@ -1119,6 +1119,53 @@ def extract_next_action_items(result_text: str) -> list[str]:
     return unique_nonempty(candidates)
 
 
+def extract_acceptance_criteria_items(result_text: str) -> list[str]:
+    return unique_nonempty(bullet_lines(first_section(result_text, "Acceptance Criteria")))
+
+
+def extract_open_question_items(result_text: str) -> list[str]:
+    return unique_nonempty(bullet_lines(first_section(result_text, "Open Questions")))
+
+
+def assess_issue_readiness(
+    result_text: str,
+    workforce_key: str,
+    issue_type: str,
+) -> tuple[bool, list[str]]:
+    title = extract_issue_title(result_text, default="").strip()
+    summary_items = extract_issue_summary_items(result_text)
+    next_actions = extract_next_action_items(result_text)
+    acceptance_items = extract_acceptance_criteria_items(result_text)
+    open_questions = extract_open_question_items(result_text)
+
+    reasons: list[str] = []
+    if not title or title.lower() == "feat: requirement from workforce debate":
+        reasons.append("Issue Title이 비어 있거나 기본값 수준이다.")
+    if workforce_key == "commitment":
+        reasons.append("commitment 결과는 직접 issue보다 다음 workforce handoff에 더 적합하다.")
+    if len(summary_items) < 2 and len(first_section(result_text, "Summary").strip().splitlines()) < 2:
+        reasons.append("Summary가 너무 얕아서 작업 배경 설명이 부족하다.")
+    if len(acceptance_items) < 2:
+        reasons.append("Acceptance Criteria가 최소 2개 미만이라 완료 기준이 불명확하다.")
+    if issue_type == "bundle":
+        if len(next_actions) < 2:
+            reasons.append("bundle issue를 만들 만큼 분리된 Next Actions가 충분하지 않다.")
+    else:
+        if not next_actions:
+            reasons.append("바로 착수할 Next Actions가 없다.")
+
+    placeholder_markers = ("TBD", "추후", "나중", "미정")
+    placeholder_hits = sum(
+        1
+        for item in [title, *summary_items, *next_actions, *acceptance_items, *open_questions]
+        if any(marker in item for marker in placeholder_markers)
+    )
+    if placeholder_hits >= 2:
+        reasons.append("결과에 placeholder 성격의 표현이 많아 아직 작업 단위로 굳지 않았다.")
+
+    return (len(reasons) == 0, reasons)
+
+
 def issue_labels_for_type(
     issue_type: str,
     extra_labels: Optional[list[str]] = None,
@@ -1554,37 +1601,47 @@ def run_workforce(
     deferred_issue_creation = create_issue and workforce_key == "commitment" and auto_run_next
     if create_issue and not deferred_issue_creation:
         print()
-        print("📌 GitHub Issue 생성 중...")
-        issue_output = create_github_issues(
+        ready_for_issue, readiness_reasons = assess_issue_readiness(
             result_text=final_result,
             workforce_key=workforce_key,
-            topic=resolved_topic,
-            repo=issue_repo or "Jongtae/AI-Fashion-Forum",
             issue_type=issue_type,
-            labels=issue_labels,
-            issue_assignees=issue_assignees,
-            task_assignees=task_assignees,
-            milestone=issue_milestone,
-            project=issue_project,
-            epic_label=epic_label,
-            with_sprint=with_sprint,
-            max_child_issues=max_child_issues,
         )
-        if issue_output:
-            issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
-            append_run_ledger_entry(
-                artifacts=artifacts,
+        if ready_for_issue:
+            print("📌 GitHub Issue 생성 중...")
+            issue_output = create_github_issues(
+                result_text=final_result,
                 workforce_key=workforce_key,
-                scenario_label=scenario["label"],
                 topic=resolved_topic,
                 repo=issue_repo or "Jongtae/AI-Fashion-Forum",
                 issue_type=issue_type,
-                issue_urls=issue_urls,
-                rounds=len(round_results),
                 labels=issue_labels,
+                issue_assignees=issue_assignees,
+                task_assignees=task_assignees,
                 milestone=issue_milestone,
+                project=issue_project,
+                epic_label=epic_label,
+                with_sprint=with_sprint,
+                max_child_issues=max_child_issues,
             )
-            print(f"  ✓ Issue 생성 완료:\n{issue_output}")
+            if issue_output:
+                issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
+                append_run_ledger_entry(
+                    artifacts=artifacts,
+                    workforce_key=workforce_key,
+                    scenario_label=scenario["label"],
+                    topic=resolved_topic,
+                    repo=issue_repo or "Jongtae/AI-Fashion-Forum",
+                    issue_type=issue_type,
+                    issue_urls=issue_urls,
+                    rounds=len(round_results),
+                    labels=issue_labels,
+                    milestone=issue_milestone,
+                )
+                print(f"  ✓ Issue 생성 완료:\n{issue_output}")
+        else:
+            print("⏭️ Issue 발급 건너뜀: 아직 작업 단위로 굳지 않았습니다.")
+            for reason in readiness_reasons:
+                print(f"  - {reason}")
 
     next_run = None
     if auto_run_next:
