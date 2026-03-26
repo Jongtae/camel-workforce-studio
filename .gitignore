@@ -7,5 +7,6 @@ __pycache__/
 
 scripts/requirement-debate/outputs/
 context/raw/github/issues.json
+context/history/*.jsonl
 context/normalized/
 context/workflow-inputs/

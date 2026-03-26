@@ -34,6 +34,7 @@
 - `Context Builder` 도입: GitHub / reports / progress / source repo 상태를 정규화
 - `run_studio.py` 도입: context build + commitment + next workforce 체이닝
 - `commitment` 단순화: CAMEL workforce 대신 single decision agent로 변경
+- run ledger 도입: 어떤 workforce run이 어떤 GitHub issue를 만들었는지 `context/history/run-ledger.jsonl`에 기록
 
 ## 3. 왜 CAMEL memory보다 명시적 handoff를 택했나
 
@@ -140,6 +141,7 @@ AI-Fashion-Forum의 실제 agent backend 요구사항을 도출하는 팀이다.
 - [`shared-memory-evaluation.md`](/Users/jongtaelee/Documents/camel-workforce-studio/docs/shared-memory-evaluation.md)
 
 실전 활용 판정 기준은 readiness scorecard를 따르고, 튜닝 과정은 iteration log에 누적한다.
+issue 발급 이력과 현재 처리 상태는 run ledger와 `context/normalized/issue_execution_history.md`를 함께 본다.
 
 ## 7. 다음 사람이 이어받을 때의 운영 팁
 

@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from workforce_artifacts import (
+    append_run_ledger_entry,
     bullet_lines,
     build_handoff_markdown,
     first_section,
@@ -1570,6 +1571,19 @@ def run_workforce(
             max_child_issues=max_child_issues,
         )
         if issue_output:
+            issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
+            append_run_ledger_entry(
+                artifacts=artifacts,
+                workforce_key=workforce_key,
+                scenario_label=scenario["label"],
+                topic=resolved_topic,
+                repo=issue_repo or "Jongtae/AI-Fashion-Forum",
+                issue_type=issue_type,
+                issue_urls=issue_urls,
+                rounds=len(round_results),
+                labels=issue_labels,
+                milestone=issue_milestone,
+            )
             print(f"  ✓ Issue 생성 완료:\n{issue_output}")
 
     next_run = None

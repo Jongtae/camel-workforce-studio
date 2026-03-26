@@ -13,6 +13,10 @@ from typing import Optional
 
 WORKFORCE_KEYS = {"commitment", "core", "operator", "society", "default"}
 SECTION_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.M)
+ROOT_DIR = Path(__file__).resolve().parents[2]
+CONTEXT_DIR = ROOT_DIR / "context"
+HISTORY_DIR = CONTEXT_DIR / "history"
+RUN_LEDGER_PATH = HISTORY_DIR / "run-ledger.jsonl"
 
 
 @dataclass
@@ -24,6 +28,10 @@ class ArtifactBundle:
     next_questions: Path
     handoff: Path
     metadata: Path
+
+
+def ensure_history_dir() -> None:
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def slugify(value: str, fallback: str = "run") -> str:
@@ -280,6 +288,95 @@ def write_run_artifacts(
         handoff=handoff,
         metadata=metadata,
     )
+
+
+def parse_issue_urls(text: str) -> list[str]:
+    urls = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if line.startswith("http://") or line.startswith("https://"):
+            urls.append(line)
+    return urls
+
+
+def issue_number_from_url(url: str) -> Optional[int]:
+    match = re.search(r"/issues/(\d+)$", url.strip())
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def append_run_ledger_entry(
+    artifacts: ArtifactBundle,
+    workforce_key: str,
+    scenario_label: str,
+    topic: str,
+    repo: str,
+    issue_type: str,
+    issue_urls: list[str],
+    rounds: int,
+    labels: Optional[list[str]] = None,
+    milestone: Optional[str] = None,
+) -> dict:
+    ensure_history_dir()
+    issue_numbers = [number for number in (issue_number_from_url(url) for url in issue_urls) if number]
+    entry = {
+        "recorded_at": datetime.now().isoformat(),
+        "run_dir": str(artifacts.run_dir),
+        "metadata_path": str(artifacts.metadata),
+        "decision_path": str(artifacts.decision),
+        "handoff_path": str(artifacts.handoff),
+        "workforce": workforce_key,
+        "label": scenario_label,
+        "topic": topic,
+        "issue_repo": repo,
+        "issue_type": issue_type,
+        "rounds": rounds,
+        "labels": labels or [],
+        "milestone": milestone or "",
+        "issue_urls": issue_urls,
+        "issue_numbers": issue_numbers,
+    }
+    with RUN_LEDGER_PATH.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    try:
+        metadata_payload = json.loads(artifacts.metadata.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        metadata_payload = {}
+    metadata_payload["issue_history"] = {
+        "ledger_path": str(RUN_LEDGER_PATH),
+        "issue_repo": repo,
+        "issue_type": issue_type,
+        "issue_urls": issue_urls,
+        "issue_numbers": issue_numbers,
+        "labels": labels or [],
+        "milestone": milestone or "",
+    }
+    artifacts.metadata.write_text(
+        json.dumps(metadata_payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return entry
+
+
+def load_run_ledger(limit: Optional[int] = None) -> list[dict]:
+    if not RUN_LEDGER_PATH.exists():
+        return []
+
+    entries = []
+    for line in RUN_LEDGER_PATH.read_text(encoding="utf-8").splitlines():
+        text = line.strip()
+        if not text:
+            continue
+        try:
+            entries.append(json.loads(text))
+        except json.JSONDecodeError:
+            continue
+    entries.sort(key=lambda item: item.get("recorded_at", ""), reverse=True)
+    if limit is not None:
+        return entries[:limit]
+    return entries
 
 
 def load_handoff(path: Optional[str]) -> str:

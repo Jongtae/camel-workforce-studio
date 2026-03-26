@@ -18,7 +18,8 @@
 2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다.
 3. 선택된 workforce가 handoff와 context pack을 함께 읽고 토론합니다.
 4. 각 실행은 `decision.md`, `handoff.md`, `next_questions.md`, `round_summary.md`, `full_report.md`를 남깁니다.
-5. 다음 workforce 또는 GitHub issue 초안은 이 산출물을 기준으로 이어집니다.
+5. issue를 발급하면 run-to-issue ledger가 `context/history/run-ledger.jsonl`에 기록됩니다.
+6. 다음 workforce 또는 GitHub issue 초안은 이 산출물과 ledger를 기준으로 이어집니다.
 
 ## Repository Layout
 
@@ -41,6 +42,7 @@ scripts/
 
 context/
   README.md
+  history/
   raw/
   normalized/
   workflow-inputs/
@@ -151,6 +153,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - `next_questions.md`: 후속 논의 질문
 - `round_summary.md`: 라운드별 정리
 - `metadata.json`: 실행 메타데이터
+- `context/history/run-ledger.jsonl`: 실행과 발급된 issue를 연결하는 ledger
 
 세부 규약은 [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md) 에 정리되어 있습니다.
 
@@ -172,6 +175,8 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - GitHub Project 추가는 `gh auth refresh -s project` 권한이 없으면 자동으로 생략됩니다.
 - `bundle`은 Epic을 먼저 만들고, 그 아래 child task를 순서대로 발급합니다.
 - child task의 처리 순서는 `Next Actions` 순서를 따릅니다.
+- issue를 발급하면 해당 run과 issue URL/번호가 `context/history/run-ledger.jsonl`에 기록됩니다.
+- 다음 `build_context.py` 실행은 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`에 반영합니다.
 
 ## Shared Memory Policy
 

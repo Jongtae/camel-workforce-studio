@@ -19,7 +19,7 @@ REQUIREMENT_DEBATE_DIR = ROOT_DIR / "scripts" / "requirement-debate"
 if str(REQUIREMENT_DEBATE_DIR) not in sys.path:
     sys.path.insert(0, str(REQUIREMENT_DEBATE_DIR))
 
-from workforce_artifacts import summarize_latest_run
+from workforce_artifacts import load_run_ledger, summarize_latest_run
 
 
 WORKFLOW_OBJECTIVES = {
@@ -35,6 +35,7 @@ def ensure_dirs() -> None:
         RAW_DIR / "github",
         RAW_DIR / "reports",
         RAW_DIR / "progress",
+        CONTEXT_DIR / "history",
         NORMALIZED_DIR,
         WORKFLOW_INPUTS_DIR,
     ]:
@@ -87,6 +88,55 @@ def collect_github_issues(repo: str) -> list:
         encoding="utf-8",
     )
     return issues
+
+
+def collect_issue_snapshot(repo: str, issue_number: int) -> dict:
+    result = subprocess.run(
+        [
+            "gh",
+            "issue",
+            "view",
+            str(issue_number),
+            "--repo",
+            repo,
+            "--json",
+            "number,title,state,closedAt,url,labels,assignees",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return {}
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {}
+
+
+def collect_issue_execution_history() -> list:
+    history = []
+    for entry in load_run_ledger(limit=12):
+        repo = entry.get("issue_repo", "")
+        issue_numbers = entry.get("issue_numbers", [])
+        issue_states = []
+        for issue_number in issue_numbers:
+            snapshot = collect_issue_snapshot(repo, issue_number)
+            if snapshot:
+                issue_states.append(snapshot)
+        history.append(
+            {
+                "recorded_at": entry.get("recorded_at", ""),
+                "run_dir": entry.get("run_dir", ""),
+                "workforce": entry.get("workforce", ""),
+                "topic": entry.get("topic", ""),
+                "issue_repo": repo,
+                "issue_type": entry.get("issue_type", ""),
+                "issue_urls": entry.get("issue_urls", []),
+                "issue_numbers": issue_numbers,
+                "issue_states": issue_states,
+            }
+        )
+    return history
 
 
 def collect_source_repo_state(source_dir: Path) -> dict:
@@ -398,6 +448,47 @@ def render_open_questions(issues: list, progress_items: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def render_issue_execution_history(history: list) -> str:
+    lines = ["# Issue Execution History", ""]
+    if not history:
+        lines.append("- No run-to-issue ledger entries were found yet.")
+        return "\n".join(lines) + "\n"
+
+    for entry in history:
+        lines.extend(
+            [
+                f"## {entry.get('recorded_at', 'unknown time')}",
+                f"- Workforce: {entry.get('workforce', 'unknown')}",
+                f"- Topic: {entry.get('topic', 'unknown')}",
+                f"- Repo: {entry.get('issue_repo', 'unknown')}",
+                f"- Issue Type: {entry.get('issue_type', 'unknown')}",
+                f"- Run Dir: {entry.get('run_dir', 'unknown')}",
+            ]
+        )
+        issue_states = entry.get("issue_states", [])
+        if issue_states:
+            lines.append("- Current Issue States:")
+            for state in issue_states:
+                labels = ", ".join(label["name"] for label in state.get("labels", [])) or "no labels"
+                assignees = ", ".join(
+                    assignee.get("login", "") for assignee in state.get("assignees", [])
+                ) or "unassigned"
+                lines.append(
+                    f"  - #{state.get('number')} {state.get('title')} [{state.get('state')}] "
+                    f"(assignees: {assignees}; labels: {labels})"
+                )
+        else:
+            urls = entry.get("issue_urls", [])
+            if urls:
+                lines.append("- Issued URLs:")
+                for url in urls:
+                    lines.append(f"  - {url}")
+            else:
+                lines.append("- No linked issue URLs were recorded.")
+        lines.append("")
+    return "\n".join(lines).strip() + "\n"
+
+
 def render_latest_workforce_state(latest_workforce_state: str) -> str:
     return latest_workforce_state.strip() + ("\n" if latest_workforce_state else "")
 
@@ -431,6 +522,9 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 
 ## Latest Workforce State
 {normalized['latest_workforce_state']}
+
+## Issue Execution History
+{normalized['issue_execution_history']}
 
 ## Active Issues
 {normalized['active_issues']}
@@ -482,6 +576,7 @@ def main() -> None:
     source_state = collect_source_repo_state(Path(args.source_dir))
     source_intent = collect_source_repo_intent(Path(args.source_dir))
     latest_workforce_state = summarize_latest_run(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
+    issue_execution_history = collect_issue_execution_history()
 
     normalized = {
         "current_situation": render_current_situation(
@@ -491,6 +586,7 @@ def main() -> None:
         "source_repo_intent": render_source_repo_intent(source_intent),
         "source_repo_state": render_source_repo_state(source_state),
         "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
+        "issue_execution_history": render_issue_execution_history(issue_execution_history),
         "active_issues": render_active_issues(issues),
         "recent_progress": render_recent_progress(progress_items),
         "external_report_briefs": render_external_report_briefs(reports),
@@ -503,6 +599,7 @@ def main() -> None:
         ("source_repo_intent.md", normalized["source_repo_intent"]),
         ("source_repo_state.md", normalized["source_repo_state"]),
         ("latest_workforce_state.md", normalized["latest_workforce_state"]),
+        ("issue_execution_history.md", normalized["issue_execution_history"]),
         ("active_issues.md", normalized["active_issues"]),
         ("recent_progress.md", normalized["recent_progress"]),
         ("external_report_briefs.md", normalized["external_report_briefs"]),
