@@ -21,6 +21,7 @@ import json
 import re
 import subprocess
 import sys
+from difflib import SequenceMatcher
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -49,7 +50,11 @@ def camel_runtime():
     try:
         from camel.agents import ChatAgent
         from camel.models import ModelFactory
-        from camel.societies.workforce import SingleAgentWorker, Workforce
+        from camel.societies.workforce import (
+            SingleAgentWorker,
+            Workforce,
+            FailureHandlingConfig,
+        )
         from camel.tasks import Task
         from camel.types import ModelPlatformType, ModelType
     except ImportError as exc:
@@ -61,6 +66,7 @@ def camel_runtime():
         "ChatAgent": ChatAgent,
         "ModelFactory": ModelFactory,
         "SingleAgentWorker": SingleAgentWorker,
+        "FailureHandlingConfig": FailureHandlingConfig,
         "Task": Task,
         "Workforce": Workforce,
         "ModelPlatformType": ModelPlatformType,
@@ -761,6 +767,7 @@ def build_workforce(
     ChatAgent = runtime["ChatAgent"]
     SingleAgentWorker = runtime["SingleAgentWorker"]
     Workforce = runtime["Workforce"]
+    FailureHandlingConfig = runtime["FailureHandlingConfig"]
 
     roles = roles_config["roles"]
     model = create_model(model_name)
@@ -787,6 +794,16 @@ def build_workforce(
         model=model,
     )
 
+    # replan/decompose 전략은 새 task 인스턴스를 생성하여 failure_count를 0으로
+    # 리셋하므로 retry limit에 도달하지 못하는 무한 루프를 유발한다.
+    # enabled_strategies=[] 로 설정하면 품질 평가 자체를 건너뛰고 task를
+    # 즉시 완료 처리하여 무한 루프를 방지한다.
+    failure_config = FailureHandlingConfig(
+        max_retries=2,
+        enabled_strategies=[],
+        halt_on_max_retries=False,
+    )
+
     workforce = Workforce(
         description=scenario["workforce_description"],
         children=workers,
@@ -794,6 +811,7 @@ def build_workforce(
         task_agent=task_agent,
         use_structured_output_handler=False,
         share_memory=share_memory,
+        failure_handling_config=failure_config,
     )
 
     return workforce
@@ -1193,6 +1211,139 @@ def issue_labels_for_type(
     return unique_nonempty(labels)
 
 
+def normalize_issue_title(title: str) -> str:
+    text = title.strip()
+    text = re.sub(r"^(epic|task|sprint)\s*:\s*", "", text, flags=re.I)
+    text = re.sub(r"^\s*[•\-*#]+\s*", "", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.lower().strip()
+
+
+def load_existing_github_issues(repo: str, limit: int = 300) -> list[dict[str, Any]]:
+    base_cmd = [
+        "gh",
+        "issue",
+        "list",
+        "--repo",
+        repo,
+        "--state",
+        "all",
+        "--limit",
+        str(limit),
+    ]
+    for json_fields in (
+        "number,title,state,url,body",
+        "number,title,state,url",
+    ):
+        cmd = [*base_cmd, "--json", json_fields]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            continue
+
+        try:
+            payload = json.loads(result.stdout or "[]")
+        except json.JSONDecodeError:
+            continue
+
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+
+    print("  ⚠ GitHub Issue 목록 조회 실패: gh issue list 응답을 가져오지 못했습니다.")
+    return []
+
+
+def build_issue_index(issues: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    index: dict[str, dict[str, Any]] = {}
+    for issue in issues:
+        title = str(issue.get("title", "")).strip()
+        normalized = normalize_issue_title(title)
+        if normalized and normalized not in index:
+            index[normalized] = issue
+    return index
+
+
+def issue_signal_tokens(text: str) -> set[str]:
+    raw_tokens = re.findall(r"[0-9A-Za-z가-힣]+", text.lower())
+    signal_tokens = {
+        "action",
+        "행동",
+        "state",
+        "상태",
+        "memory",
+        "기억",
+        "trace",
+        "snapshot",
+        "event",
+        "artifact",
+        "contract",
+        "override",
+        "persona",
+        "character",
+        "content",
+        "ingestion",
+        "writeback",
+        "loop",
+        "backend",
+        "api",
+        "schema",
+        "identity",
+        "feedback",
+        "monitoring",
+        "moderation",
+        "policy",
+        "behavior",
+        "behavioral",
+        "interaction",
+        "forum",
+        "post",
+        "comment",
+        "react",
+        "lurk",
+        "silence",
+    }
+    return {token for token in raw_tokens if token in signal_tokens}
+
+
+def issue_match_score(candidate_title: str, candidate_body: str, existing_issue: dict[str, Any]) -> tuple[float, int]:
+    existing_title = str(existing_issue.get("title", "")).strip()
+    existing_body = str(existing_issue.get("body", "")).strip()
+
+    candidate_norm = normalize_issue_title(candidate_title)
+    existing_norm = normalize_issue_title(existing_title)
+    title_score = SequenceMatcher(None, candidate_norm, existing_norm).ratio()
+
+    candidate_tokens = issue_signal_tokens(f"{candidate_title}\n{candidate_body}")
+    existing_tokens = issue_signal_tokens(f"{existing_title}\n{existing_body}")
+    overlap_count = len(candidate_tokens & existing_tokens)
+    return title_score, overlap_count
+
+
+def resolve_existing_issue(
+    issue_index: dict[str, dict[str, Any]],
+    title: str,
+    body: str = "",
+) -> Optional[dict[str, Any]]:
+    normalized = normalize_issue_title(title)
+    if not normalized:
+        return None
+    exact_match = issue_index.get(normalized)
+    if exact_match:
+        return exact_match
+
+    best_match: Optional[dict[str, Any]] = None
+    best_score = 0.0
+    best_overlap = 0
+    for existing in issue_index.values():
+        title_score, overlap_count = issue_match_score(title, body, existing)
+        if title_score >= 0.8 or overlap_count >= 5:
+            if title_score > best_score or (title_score == best_score and overlap_count > best_overlap):
+                best_match = existing
+                best_score = title_score
+                best_overlap = overlap_count
+
+    return best_match
+
+
 def build_issue_body(
     result_text: str,
     workforce_key: str,
@@ -1273,6 +1424,45 @@ def run_gh_issue_create(
 
     print(f"  ⚠ GitHub Issue 생성 실패: {result.stderr}")
     return ""
+
+
+def create_or_reuse_issue(
+    repo: str,
+    title: str,
+    body: str,
+    labels: list[str],
+    issue_index: dict[str, dict[str, Any]],
+    assignees: Optional[list[str]] = None,
+    milestone: Optional[str] = None,
+    project: Optional[str] = None,
+) -> str:
+    existing = resolve_existing_issue(issue_index, title, body=body)
+    if existing:
+        url = str(existing.get("url", "")).strip()
+        number = existing.get("number", "?")
+        state = existing.get("state", "unknown")
+        existing_title = str(existing.get("title", "")).strip()
+        if url:
+            print(f"  ↪ 기존 issue 재사용: #{number} [{state}] {existing_title}")
+            return url
+
+    created = run_gh_issue_create(
+        repo=repo,
+        title=title,
+        body=body,
+        labels=labels,
+        assignees=assignees,
+        milestone=milestone,
+        project=project,
+    )
+    if created:
+        issue_index[normalize_issue_title(title)] = {
+            "title": title,
+            "body": body,
+            "url": created,
+            "state": "OPEN",
+        }
+    return created
 
 
 def create_task_issue_specs(
@@ -1442,15 +1632,17 @@ def create_github_issues(
         raise ValueError(f"Unknown issue_type: {issue_type}")
 
     base_title = extract_issue_title(result_text)
+    existing_issues = build_issue_index(load_existing_github_issues(repo))
 
     if issue_type in {"single", "task"}:
         title = base_title if issue_type == "single" else shorten_title(base_title, prefix="Task: ")
         body = build_issue_body(result_text, workforce_key, topic)
-        return run_gh_issue_create(
+        return create_or_reuse_issue(
             repo=repo,
             title=title,
             body=body,
             labels=issue_labels_for_type("task", labels),
+            issue_index=existing_issues,
             assignees=issue_assignees,
             milestone=milestone,
             project=project,
@@ -1459,11 +1651,12 @@ def create_github_issues(
     if issue_type == "epic":
         title = shorten_title(base_title, prefix="Epic: ")
         body = build_issue_body(result_text, workforce_key, topic)
-        return run_gh_issue_create(
+        return create_or_reuse_issue(
             repo=repo,
             title=title,
             body=body,
             labels=issue_labels_for_type("epic", labels, epic_label=epic_label),
+            issue_index=existing_issues,
             assignees=issue_assignees,
             milestone=milestone,
             project=project,
@@ -1472,11 +1665,12 @@ def create_github_issues(
     if issue_type == "sprint":
         title = shorten_title(milestone or base_title, prefix="Sprint: ")
         body = create_sprint_issue_body(base_title, "(not linked)", [], {}, milestone)
-        return run_gh_issue_create(
+        return create_or_reuse_issue(
             repo=repo,
             title=title,
             body=body,
             labels=issue_labels_for_type("task", labels),
+            issue_index=existing_issues,
             assignees=issue_assignees,
             milestone=milestone,
             project=project,
@@ -1499,11 +1693,12 @@ def create_github_issues(
         topic,
         child_links=planned_task_lines,
     )
-    epic_url = run_gh_issue_create(
+    epic_url = create_or_reuse_issue(
         repo=repo,
         title=epic_title,
         body=epic_body,
         labels=issue_labels_for_type("epic", labels, epic_label=epic_label),
+        issue_index=existing_issues,
         assignees=issue_assignees,
         milestone=milestone,
         project=project,
@@ -1529,11 +1724,12 @@ def create_github_issues(
             execution_order=task_order,
             suggested_assignee=task_assignee,
         )
-        task_url = run_gh_issue_create(
+        task_url = create_or_reuse_issue(
             repo=repo,
             title=task_title,
             body=task_body,
             labels=issue_labels_for_type("task", labels, epic_label=epic_label),
+            issue_index=existing_issues,
             assignees=[task_assignee] if task_assignee else issue_assignees,
             milestone=milestone,
             project=project,
@@ -1554,11 +1750,12 @@ def create_github_issues(
             assignee_queues,
             milestone,
         )
-        sprint_url = run_gh_issue_create(
+        sprint_url = create_or_reuse_issue(
             repo=repo,
             title=sprint_title,
             body=sprint_body,
             labels=issue_labels_for_type("task", labels),
+            issue_index=existing_issues,
             assignees=issue_assignees,
             milestone=milestone,
             project=project,

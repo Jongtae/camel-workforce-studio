@@ -115,6 +115,7 @@ sprint issue에는 담당자별 처리 순서가 같이 기록된다.
 issue를 발급한 run은 반드시 `context/history/run-ledger.jsonl`에 기록되어야 한다.
 다음 `build_context.py` 실행은 이 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`로 다시 정규화해야 한다.
 같은 실행에서 open PR과 최근 merged PR도 `context/normalized/active_pull_requests.md`, `context/normalized/recent_merged_pull_requests.md`로 정규화해야 한다.
+GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용해야 한다.
 
 ## Society Quality Bar
 
@@ -154,6 +155,7 @@ Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준
 - `--create-issue`는 issue-ready 결과에만 적용한다. 최소 기준은 `Issue Title`, 충분한 `Summary`, 2개 이상의 `Acceptance Criteria`, 그리고 착수 가능한 `Next Actions`다.
 - `--create-issue`만 주면 먼저 `issue_plan.md` draft를 저장한다.
 - 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행한다.
+- GitHub에 같은 제목의 issue가 이미 있으면 중복 생성 대신 기존 issue를 재사용한다.
 
 ## When Updating This Repo
 

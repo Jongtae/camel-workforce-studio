@@ -182,6 +182,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - child task의 처리 순서는 `Next Actions` 순서를 따릅니다.
 - issue를 발급하면 해당 run과 issue URL/번호가 `context/history/run-ledger.jsonl`에 기록됩니다.
 - 다음 `build_context.py` 실행은 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`에 반영합니다.
+- GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용합니다.
 - commitment와 각 workforce는 issue뿐 아니라 open PR과 최근 merged PR도 context source로 읽습니다.
 - `--create-issue`를 주면 먼저 `issue_plan.md` draft를 만듭니다.
 - 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행합니다.
