@@ -26,6 +26,7 @@ class ArtifactBundle:
     decision: Path
     round_summary: Path
     next_questions: Path
+    reflection: Path
     handoff: Path
     metadata: Path
 
@@ -216,6 +217,7 @@ def write_run_artifacts(
     decision = run_dir / "decision.md"
     round_summary = run_dir / "round_summary.md"
     next_questions = run_dir / "next_questions.md"
+    reflection = run_dir / "reflection.md"
     handoff = run_dir / "handoff.md"
     metadata = run_dir / "metadata.json"
 
@@ -255,6 +257,37 @@ def write_run_artifacts(
         encoding="utf-8",
     )
 
+    reflection_lines = [
+        "# Reflection",
+        "",
+        f"- Workforce: {workforce_key}",
+        f"- Topic: {topic}",
+        f"- Target Workforce: {target_workforce or 'TBD'}",
+        f"- Next Topic: {next_topic or 'TBD'}",
+        "",
+        "## What Worked",
+        "",
+        first_section(
+            final_result_text,
+            "Summary",
+            "Key Decisions",
+            "Required Decisions",
+        ).strip() or "- No compact decision summary was extracted.",
+        "",
+        "## What Is Still Blocked",
+        "",
+        extracted_open_questions.strip() or "- No open questions were extracted.",
+        "",
+        "## Continuation Hint",
+        "",
+        (
+            f"- The next run should continue toward {target_workforce or 'the next workforce'}"
+            f" with topic: {next_topic or 'TBD'}."
+        ),
+        "",
+    ]
+    reflection.write_text("\n".join(reflection_lines).strip() + "\n", encoding="utf-8")
+
     handoff.write_text(handoff_text, encoding="utf-8")
 
     metadata_payload = {
@@ -271,6 +304,7 @@ def write_run_artifacts(
             "decision": str(decision),
             "round_summary": str(round_summary),
             "next_questions": str(next_questions),
+            "reflection": str(reflection),
             "handoff": str(handoff),
         },
     }
@@ -285,6 +319,7 @@ def write_run_artifacts(
         decision=decision,
         round_summary=round_summary,
         next_questions=next_questions,
+        reflection=reflection,
         handoff=handoff,
         metadata=metadata,
     )
@@ -434,6 +469,7 @@ def summarize_latest_run(output_dir: Path) -> str:
 
     metadata_path = latest_run / "metadata.json"
     decision_path = latest_run / "decision.md"
+    reflection_path = latest_run / "reflection.md"
     handoff_path = latest_run / "handoff.md"
 
     workforce = "unknown"
@@ -464,6 +500,14 @@ def summarize_latest_run(output_dir: Path) -> str:
             "Decisions Already Fixed",
             "Why This Handoff",
         )
+    reflection_summary = ""
+    if reflection_path.exists():
+        reflection_summary = first_section(
+            reflection_path.read_text(encoding="utf-8"),
+            "What Worked",
+            "What Is Still Blocked",
+            "Continuation Hint",
+        )
 
     lines = [
         "# Latest Workforce State",
@@ -476,6 +520,9 @@ def summarize_latest_run(output_dir: Path) -> str:
         "",
         "## Latest Decision Summary",
         decision_summary.strip() if decision_summary else "- No previous decision summary found.",
+        "",
+        "## Latest Reflection",
+        reflection_summary.strip() if reflection_summary else "- No previous reflection found.",
         "",
     ]
     return "\n".join(lines)

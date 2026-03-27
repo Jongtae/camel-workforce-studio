@@ -50,6 +50,7 @@
 - `decision.md`
 - `round_summary.md`
 - `next_questions.md`
+- `reflection.md`
 - `handoff.md`
 - `metadata.json`
 

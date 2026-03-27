@@ -157,6 +157,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - `handoff.md`: 다음 workforce로 넘길 구조화된 handoff
 - `next_questions.md`: 후속 논의 질문
 - `round_summary.md`: 라운드별 정리
+- `reflection.md`: 다음 run이 이어받을 reflection note
 - `metadata.json`: 실행 메타데이터
 - `sim_results.md`: 선택적 AI-Fashion-Forum 실험 산출물 정규화본
 - `society_output_contract.json`: 최신 society 결정을 구조화한 계약 파일

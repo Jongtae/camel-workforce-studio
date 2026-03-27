@@ -171,6 +171,9 @@ issue 발급 이력과 현재 처리 상태는 run ledger와 `context/normalized
 6. 이미 발급된 issue는 버리지 말고 continuation comment로 이어가라.
    닫힌 유사 issue를 만나면 새 issue를 억지로 만들기보다, 기존 thread를 workflow memory처럼 재사용하는 편이 낫다.
 
+7. 각 run에는 `reflection.md`를 남겨라.
+   다음 run이 무엇을 이어받아야 하는지 `decision.md`와 `handoff.md` 사이에 짧은 기억층을 하나 더 두는 것이 좋다.
+
 ## 8. 추천 문서 갱신 규칙
 
 앞으로도 구조를 바꾸면 아래 문서를 같이 갱신하는 것이 좋다.
