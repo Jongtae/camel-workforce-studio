@@ -187,10 +187,12 @@ GitHub Actions에서 `AI-Fashion-Forum`에 issue를 실제로 생성하려면 `s
 - GitHub Project 추가는 `gh auth refresh -s project` 권한이 없으면 자동으로 생략됩니다.
 - `bundle`은 Epic을 먼저 만들고, 그 아래 child task를 순서대로 발급합니다.
 - child task의 처리 순서는 `Next Actions` 순서를 따릅니다.
+- 닫힌 issue와 제목/핵심 키워드가 과하게 비슷하면 새 발급을 멈추고 `issue_plan.md`만 남깁니다.
 - issue를 발급하면 해당 run과 issue URL/번호가 `context/history/run-ledger.jsonl`에 기록됩니다.
 - 다음 `build_context.py` 실행은 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`에 반영합니다.
 - GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용합니다.
 - commitment와 각 workforce는 issue뿐 아니라 open PR과 최근 merged PR도 context source로 읽습니다.
+- closed society backlog가 감지되면 commitment는 society 재선택보다 core/operator 전환을 우선합니다.
 - `--create-issue`를 주면 먼저 `issue_plan.md` draft를 만듭니다.
 - 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행합니다.
 - `Issue Title`, `Summary`, `Acceptance Criteria`, `Next Actions`가 충분히 갖춰져 issue-ready 기준을 넘을 때만 draft/생성이 진행됩니다.

@@ -190,12 +190,57 @@ def collect_issue_execution_history() -> list:
                 "topic": entry.get("topic", ""),
                 "issue_repo": repo,
                 "issue_type": entry.get("issue_type", ""),
+                "issue_status": entry.get("issue_status", ""),
                 "issue_urls": entry.get("issue_urls", []),
                 "issue_numbers": issue_numbers,
                 "issue_states": issue_states,
             }
         )
     return history
+
+
+def render_closed_society_backlog(history: list) -> str:
+    lines = ["# Closed Society Backlog", ""]
+    closed_items = []
+    for entry in history:
+        if entry.get("workforce") != "society":
+            continue
+        issue_states = entry.get("issue_states", [])
+        if any(str(state.get("state", "")).upper() != "OPEN" for state in issue_states):
+            closed_items.append(entry)
+
+    if not closed_items:
+        lines.append("- No closed society backlog entries were found.")
+        return "\n".join(lines) + "\n"
+
+    for entry in closed_items[:12]:
+        lines.extend(
+            [
+                f"## {entry.get('recorded_at', 'unknown time')}",
+                f"- Run Dir: {entry.get('run_dir', 'unknown')}",
+                f"- Topic: {entry.get('topic', 'unknown')}",
+                f"- Issue Status: {entry.get('issue_status', 'unknown')}",
+            ]
+        )
+        issue_states = entry.get("issue_states", [])
+        for state in issue_states:
+            if str(state.get("state", "")).upper() == "OPEN":
+                continue
+            lines.append(
+                f"- Closed Issue #{state.get('number')} {state.get('title')} "
+                f"(state: {state.get('state', '')}; url: {state.get('url', '')})"
+            )
+        lines.append("")
+
+    lines.extend(
+        [
+            "## Commitment Guard",
+            "- Society backlog with closed issues should be treated as already explored.",
+            "- If the current topic overlaps heavily with these closed society issues, commitment should prefer core or operator instead of society.",
+            "- Use society again only when the topic materially differs from the closed backlog.",
+        ]
+    )
+    return "\n".join(lines).strip() + "\n"
 
 
 def collect_source_repo_state(source_dir: Path) -> dict:
@@ -667,6 +712,7 @@ def render_issue_execution_history(history: list) -> str:
                 f"- Topic: {entry.get('topic', 'unknown')}",
                 f"- Repo: {entry.get('issue_repo', 'unknown')}",
                 f"- Issue Type: {entry.get('issue_type', 'unknown')}",
+                f"- Issue Status: {entry.get('issue_status', 'unknown')}",
                 f"- Run Dir: {entry.get('run_dir', 'unknown')}",
             ]
         )
@@ -815,6 +861,9 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Issue Execution History
 {normalized['issue_execution_history']}
 
+## Closed Society Backlog
+{normalized['closed_society_backlog']}
+
 ## Active Issues
 {normalized['active_issues']}
 
@@ -887,6 +936,7 @@ def main() -> None:
     source_intent = collect_source_repo_intent(Path(args.source_dir))
     latest_workforce_state = summarize_latest_run(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
     issue_execution_history = collect_issue_execution_history()
+    closed_society_backlog = render_closed_society_backlog(issue_execution_history)
     society_output_contract = build_society_output_contract(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
     normalized = {
@@ -898,6 +948,7 @@ def main() -> None:
         "source_repo_state": render_source_repo_state(source_state),
         "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
         "issue_execution_history": render_issue_execution_history(issue_execution_history),
+        "closed_society_backlog": closed_society_backlog,
         "active_issues": render_active_issues(issues),
         "active_pull_requests": render_active_pull_requests(pull_requests),
         "recent_merged_pull_requests": render_recent_merged_pull_requests(pull_requests),
@@ -915,6 +966,7 @@ def main() -> None:
         ("source_repo_state.md", normalized["source_repo_state"]),
         ("latest_workforce_state.md", normalized["latest_workforce_state"]),
         ("issue_execution_history.md", normalized["issue_execution_history"]),
+        ("closed_society_backlog.md", normalized["closed_society_backlog"]),
         ("active_issues.md", normalized["active_issues"]),
         ("active_pull_requests.md", normalized["active_pull_requests"]),
         ("recent_merged_pull_requests.md", normalized["recent_merged_pull_requests"]),

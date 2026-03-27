@@ -315,6 +315,7 @@ def append_run_ledger_entry(
     issue_type: str,
     issue_urls: list[str],
     rounds: int,
+    issue_status: str = "created",
     labels: Optional[list[str]] = None,
     milestone: Optional[str] = None,
 ) -> dict:
@@ -332,6 +333,7 @@ def append_run_ledger_entry(
         "issue_repo": repo,
         "issue_type": issue_type,
         "rounds": rounds,
+        "issue_status": issue_status,
         "labels": labels or [],
         "milestone": milestone or "",
         "issue_urls": issue_urls,
@@ -348,6 +350,7 @@ def append_run_ledger_entry(
         "ledger_path": str(RUN_LEDGER_PATH),
         "issue_repo": repo,
         "issue_type": issue_type,
+        "issue_status": issue_status,
         "issue_urls": issue_urls,
         "issue_numbers": issue_numbers,
         "labels": labels or [],

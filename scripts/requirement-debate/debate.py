@@ -369,6 +369,33 @@ def enforce_commitment_decision_constraints(text: str) -> str:
     return replace_markdown_section(text, "Topic", fallback_topic)
 
 
+def commitment_has_closed_society_backlog(context_pack_text: str) -> bool:
+    lowered = context_pack_text.lower()
+    return "## closed society backlog" in lowered or (
+        "workforce: society" in lowered and "issue status: closed" in lowered
+    )
+
+
+def commitment_fallback_workforce_for_closed_society(topic: str) -> str:
+    lowered = topic.lower()
+    operator_signals = (
+        "monitor",
+        "moderation",
+        "policy",
+        "intervention",
+        "metric",
+        "dashboard",
+        "operat",
+        "자정",
+        "모니터",
+        "정책",
+        "개입",
+    )
+    if any(keyword in lowered for keyword in operator_signals):
+        return "operator"
+    return "core"
+
+
 def ensure_section_has_bullets(text: str, section_name: str, bullets: list[str]) -> str:
     current = first_section(text, section_name)
     if not current:
@@ -473,6 +500,8 @@ SCENARIOS = {
 - 최신 handoff에 이미 있는 결정을 반복하지 말고, 아직 비어 있는 다음 결정을 찾는 데 집중하라
 - Git 상태가 clean이면 "코드 변경 자체"보다 "다음에 어떤 결정을 내려야 구현/운영이 이어지는가"를 우선 판단하라
 - 최근 커밋이나 latest workforce state가 특정 방향을 가리키면, 그 방향을 그대로 따를지 수정할지 명시적으로 판단하라
+- Issue Execution History 또는 Closed Society Backlog에 닫힌 society 이슈가 보이면, 그 영역은 이미 탐색된 것으로 간주하고 society 재선택보다 core 또는 operator로 넘길지를 먼저 판단하라
+- 특히 닫힌 society backlog가 현재 topic과 강하게 겹치면 society를 다시 고르지 말고, 구현/운영 전환이 필요한지 판단하라
 
 ## 기대 산출물
 - Selected Workforce (society / operator / core / default)
@@ -847,6 +876,14 @@ def run_commitment_decision(
 ## External Context Pack
 {context_pack_text if context_pack_text else "- external context pack 없음"}
 
+## Closed Society Backlog Guard
+{(
+    "- 닫힌 society backlog가 포함되어 있다. society와 매우 유사한 주제는 이미 다뤄졌다고 간주하고, "
+    "새로운 결정이 필요하면 core 또는 operator로 넘겨라."
+    if commitment_has_closed_society_backlog(context_pack_text)
+    else "- 닫힌 society backlog 신호 없음"
+)}
+
 ## Additional Instructions
 - 먼저 현재 상황에서 이미 결정된 것과 아직 막힌 것을 짧게 식별하라.
 - 그 다음 하나의 workforce와 하나의 topic만 확정하라.
@@ -855,6 +892,22 @@ def run_commitment_decision(
 """
     response = decision_agent.step(prompt)
     final_result = enforce_commitment_decision_constraints(extract_agent_text(response))
+    if commitment_has_closed_society_backlog(context_pack_text):
+        selected_workforce, _ = parse_commitment_decision(final_result)
+        if selected_workforce == "society":
+            fallback_workforce = commitment_fallback_workforce_for_closed_society(topic)
+            final_result = replace_markdown_section(
+                final_result,
+                "Selected Workforce",
+                fallback_workforce,
+            )
+            final_result = ensure_section_has_bullets(
+                final_result,
+                "Why This Workforce",
+                [
+                    f"닫힌 society backlog가 존재하므로 {fallback_workforce}가 다음 결정 레이어로 더 적합하다.",
+                ],
+            )
     round_results = [
         {
             "round": "1",
@@ -1431,6 +1484,11 @@ def run_gh_issue_create(
     return ""
 
 
+def is_closed_issue_state(state: str) -> bool:
+    normalized = state.strip().lower()
+    return bool(normalized) and normalized != "open"
+
+
 def create_or_reuse_issue(
     repo: str,
     title: str,
@@ -1440,16 +1498,20 @@ def create_or_reuse_issue(
     assignees: Optional[list[str]] = None,
     milestone: Optional[str] = None,
     project: Optional[str] = None,
-) -> str:
+) -> tuple[str, str]:
     existing = resolve_existing_issue(issue_index, title, body=body)
     if existing:
         url = str(existing.get("url", "")).strip()
         number = existing.get("number", "?")
-        state = existing.get("state", "unknown")
+        state = str(existing.get("state", "unknown")).strip()
         existing_title = str(existing.get("title", "")).strip()
+        if is_closed_issue_state(state):
+            print(f"  ⏭ 닫힌 유사 issue 발견: #{number} [{state}] {existing_title}")
+            print("    → 새 발급은 중단하고 draft만 유지합니다.")
+            return "", "blocked_closed_duplicate"
         if url:
             print(f"  ↪ 기존 issue 재사용: #{number} [{state}] {existing_title}")
-            return url
+            return url, "reused_open"
 
     created = run_gh_issue_create(
         repo=repo,
@@ -1467,7 +1529,8 @@ def create_or_reuse_issue(
             "url": created,
             "state": "OPEN",
         }
-    return created
+        return created, "created"
+    return "", "failed"
 
 
 def create_task_issue_specs(
@@ -1557,6 +1620,7 @@ def write_issue_plan_preview(
         f"- Milestone: {milestone or '(none)'}",
         f"- Project: {project or '(none)'}",
         f"- Approval Required: yes",
+        "- Closed Duplicate Policy: closed or highly similar issues are blocked and kept as draft only.",
         "",
     ]
     if issue_assignees:
@@ -1631,7 +1695,7 @@ def create_github_issues(
     epic_label: Optional[str] = None,
     with_sprint: bool = False,
     max_child_issues: int = 5,
-) -> str:
+) -> tuple[str, str]:
     """토론 결과를 GitHub Issue 또는 issue bundle로 등록합니다."""
     if issue_type not in ISSUE_TYPE_CHOICES:
         raise ValueError(f"Unknown issue_type: {issue_type}")
@@ -1698,7 +1762,7 @@ def create_github_issues(
         topic,
         child_links=planned_task_lines,
     )
-    epic_url = create_or_reuse_issue(
+    epic_url, epic_status = create_or_reuse_issue(
         repo=repo,
         title=epic_title,
         body=epic_body,
@@ -1709,11 +1773,12 @@ def create_github_issues(
         project=project,
     )
     if not epic_url:
-        return ""
+        return "", epic_status
 
     created_links = [epic_url]
     child_issue_links: list[str] = []
     assignee_queues: dict[str, list[str]] = {}
+    issue_statuses = [epic_status]
     for spec in task_specs:
         task_title = spec["title"]
         task_goal = spec["goal"]
@@ -1729,7 +1794,7 @@ def create_github_issues(
             execution_order=task_order,
             suggested_assignee=task_assignee,
         )
-        task_url = create_or_reuse_issue(
+        task_url, task_status = create_or_reuse_issue(
             repo=repo,
             title=task_title,
             body=task_body,
@@ -1739,6 +1804,7 @@ def create_github_issues(
             milestone=milestone,
             project=project,
         )
+        issue_statuses.append(task_status)
         if task_url:
             queue_line = f"{task_order}. {task_title} -> {task_url}"
             child_issue_links.append(queue_line)
@@ -1755,7 +1821,7 @@ def create_github_issues(
             assignee_queues,
             milestone,
         )
-        sprint_url = create_or_reuse_issue(
+        sprint_url, sprint_status = create_or_reuse_issue(
             repo=repo,
             title=sprint_title,
             body=sprint_body,
@@ -1765,10 +1831,13 @@ def create_github_issues(
             milestone=milestone,
             project=project,
         )
+        issue_statuses.append(sprint_status)
         if sprint_url:
             created_links.append(sprint_url)
 
-    return "\n".join(created_links)
+    if not created_links:
+        return "", "+".join(unique_nonempty(issue_statuses)) or "failed"
+    return "\n".join(created_links), "+".join(unique_nonempty(issue_statuses)) or "created"
 
 
 def run_workforce(
@@ -1932,7 +2001,7 @@ def run_workforce(
                 print("⏸️ GitHub 발급은 보류했습니다. draft를 검토한 뒤 --approve-issue로 승인해 주세요.")
             else:
                 print("📌 GitHub Issue 생성 중...")
-                issue_output = create_github_issues(
+                issue_output, issue_status = create_github_issues(
                     result_text=final_result,
                     workforce_key=workforce_key,
                     topic=resolved_topic,
@@ -1947,21 +2016,26 @@ def run_workforce(
                     with_sprint=with_sprint,
                     max_child_issues=max_child_issues,
                 )
+                issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
+                append_run_ledger_entry(
+                    artifacts=artifacts,
+                    workforce_key=workforce_key,
+                    scenario_label=scenario["label"],
+                    topic=resolved_topic,
+                    repo=issue_repo or default_issue_repo(),
+                    issue_type=issue_type,
+                    issue_urls=issue_urls,
+                    issue_status=issue_status,
+                    rounds=len(round_results),
+                    labels=issue_labels,
+                    milestone=issue_milestone,
+                )
                 if issue_output:
-                    issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
-                    append_run_ledger_entry(
-                        artifacts=artifacts,
-                        workforce_key=workforce_key,
-                        scenario_label=scenario["label"],
-                        topic=resolved_topic,
-                        repo=issue_repo or default_issue_repo(),
-                        issue_type=issue_type,
-                        issue_urls=issue_urls,
-                        rounds=len(round_results),
-                        labels=issue_labels,
-                        milestone=issue_milestone,
-                    )
                     print(f"  ✓ Issue 생성 완료:\n{issue_output}")
+                elif issue_status == "blocked_closed_duplicate":
+                    print("  ⏭ 닫힌 유사 issue와 중복되어 새 issue 발급은 건너뛰고 draft만 유지했습니다.")
+                else:
+                    print("  ⚠ GitHub Issue 생성 결과가 비어 있습니다.")
         else:
             print("⏭️ Issue 발급 건너뜀: 아직 작업 단위로 굳지 않았습니다.")
             for reason in readiness_reasons:
