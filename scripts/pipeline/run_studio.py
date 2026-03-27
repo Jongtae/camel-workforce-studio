@@ -21,17 +21,17 @@ from workforce_artifacts import discover_latest_handoff
 
 
 def default_source_dir() -> str:
-    ad_fashion_forum = ROOT_DIR.parent / "ad-fashion-forum"
-    if ad_fashion_forum.exists():
-        return str(ad_fashion_forum)
-    legacy_ai_fashion_forum = ROOT_DIR.parent / "AI-Fashion-Forum"
-    if legacy_ai_fashion_forum.exists():
-        return str(legacy_ai_fashion_forum)
-    return str(ad_fashion_forum)
+    ai_fashion_forum = ROOT_DIR.parent / "AI-Fashion-Forum"
+    if ai_fashion_forum.exists():
+        return str(ai_fashion_forum)
+    legacy_ad_fashion_forum = ROOT_DIR.parent / "ad-fashion-forum"
+    if legacy_ad_fashion_forum.exists():
+        return str(legacy_ad_fashion_forum)
+    return str(ai_fashion_forum)
 
 
 def default_issue_repo() -> str:
-    return os.environ.get("WORKFORCE_TARGET_REPO", "Jongtae/ad-fashion-forum")
+    return os.environ.get("WORKFORCE_TARGET_REPO", "Jongtae/AI-Fashion-Forum")
 
 
 def run_command(args: list[str]) -> None:
@@ -60,7 +60,7 @@ def main() -> None:
         "--sim-results-dir",
         type=str,
         default=None,
-        help="Optional local directory containing ad-fashion-forum simulation results",
+        help="Optional local directory containing AI-Fashion-Forum simulation results",
     )
     parser.add_argument(
         "--rounds",

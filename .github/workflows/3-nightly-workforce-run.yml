@@ -1,4 +1,4 @@
-name: "3️⃣ Nightly Workforce Run & Issue Registration (ad-fashion-forum)"
+name: "3️⃣ Nightly Workforce Run & Issue Registration (AI-Fashion-Forum)"
 
 on:
   schedule:
@@ -49,11 +49,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout ad-fashion-forum
+      - name: Checkout AI-Fashion-Forum
         uses: actions/checkout@v4
         with:
-          repository: Jongtae/ad-fashion-forum
-          path: ../ad-fashion-forum
+          repository: Jongtae/AI-Fashion-Forum
+          path: ../AI-Fashion-Forum
           token: ${{ secrets.WORKFORCE_GH_TOKEN }}
 
       - name: Set up Python
@@ -71,12 +71,12 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GH_TOKEN: ${{ secrets.WORKFORCE_GH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.WORKFORCE_GH_TOKEN }}
-          WORKFORCE_TARGET_REPO: Jongtae/ad-fashion-forum
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFORCE_TARGET_REPO: Jongtae/AI-Fashion-Forum
         run: |
           python scripts/pipeline/run_studio.py \
-            --repo Jongtae/ad-fashion-forum \
-            --source-dir ../ad-fashion-forum \
+            --repo Jongtae/AI-Fashion-Forum \
+            --source-dir ../AI-Fashion-Forum \
             --rounds ${{ inputs.rounds || '1' }} \
             --model ${{ inputs.model || 'gpt-4o-mini' }} \
             --create-issue \
@@ -99,5 +99,5 @@ jobs:
         if: always()
         run: |
           echo "✅ Nightly workforce run completed"
-          echo "📍 Issue target repo: Jongtae/ad-fashion-forum"
+          echo "📍 Issue target repo: Jongtae/AI-Fashion-Forum"
           echo "📦 Artifacts: scripts/requirement-debate/outputs/, context/"

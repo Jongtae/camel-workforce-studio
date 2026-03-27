@@ -21,11 +21,11 @@
 ## Repository Intent
 
 이 저장소는 범용 CAMEL 데모가 아니다.
-목표는 [ad-fashion-forum](https://github.com/Jongtae/ad-fashion-forum)을 위한 companion decision studio를 운영하는 것이다.
+목표는 [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision studio를 운영하는 것이다.
 
 핵심 흐름:
 
-`Context Builder -> Commitment -> Selected Workforce -> Handoff -> ad-fashion-forum Issue`
+`Context Builder -> Commitment -> Selected Workforce -> Handoff -> AI-Fashion-Forum Issue`
 
 즉, 제품 코드 자체보다 "무엇을 다음에 결정해야 하는가"를 구조화하는 저장소다.
 
@@ -33,7 +33,7 @@
 
 - `commitment`
   - 현재 상황에서 가장 중요한 gap을 읽고 다음 workforce와 topic을 정한다.
-  - 가능한 한 ad-fashion-forum source repo intent를 직접 근거로 삼아야 한다.
+  - 가능한 한 AI-Fashion-Forum source repo intent를 직접 근거로 삼아야 한다.
 
 - `core`
   - 사용자-facing 의미는 development 팀이다.
@@ -62,7 +62,7 @@
 1. `context/workflow-inputs/*.md`
 2. `scripts/requirement-debate/outputs/*/decision.md`
 3. `scripts/requirement-debate/outputs/*/handoff.md`
-4. ad-fashion-forum source repo 상태
+4. AI-Fashion-Forum source repo 상태
 5. GitHub issue / PR / report / progress log
 
 ## Standard Operating Loop
@@ -72,16 +72,16 @@
 ```bash
 source .venv/bin/activate
 python scripts/context-builder/build_context.py \
-  --repo Jongtae/ad-fashion-forum \
-  --source-dir /Users/jongtaelee/Documents/ad-fashion-forum
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum
 ```
 
 ### 2. Run commitment and chain next workforce
 
 ```bash
 python scripts/pipeline/run_studio.py \
-  --repo Jongtae/ad-fashion-forum \
-  --source-dir /Users/jongtaelee/Documents/ad-fashion-forum \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
   --rounds 1
 ```
 
@@ -89,8 +89,8 @@ python scripts/pipeline/run_studio.py \
 
 ```bash
 python scripts/pipeline/run_studio.py \
-  --repo Jongtae/ad-fashion-forum \
-  --source-dir /Users/jongtaelee/Documents/ad-fashion-forum \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
   --rounds 1 \
   --create-issue \
   --issue-type bundle \
@@ -116,7 +116,7 @@ issue를 발급한 run은 반드시 `context/history/run-ledger.jsonl`에 기록
 다음 `build_context.py` 실행은 이 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`로 다시 정규화해야 한다.
 같은 실행에서 open PR과 최근 merged PR도 `context/normalized/active_pull_requests.md`, `context/normalized/recent_merged_pull_requests.md`로 정규화해야 한다.
 GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용해야 한다.
-`context-builder`는 선택적으로 ad-fashion-forum의 sim-results를 읽어 `context/normalized/sim_results.md`와 `context/normalized/society_output_contract.json`으로 정규화해야 한다.
+`context-builder`는 선택적으로 AI-Fashion-Forum의 sim-results를 읽어 `context/normalized/sim_results.md`와 `context/normalized/society_output_contract.json`으로 정규화해야 한다.
 
 ## Society Quality Bar
 
@@ -134,7 +134,7 @@ Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준
 
 ## Issue Issuance Rules
 
-이 저장소는 `ad-fashion-forum` issue 발급을 기본으로 지원한다.
+이 저장소는 `AI-Fashion-Forum` issue 발급을 기본으로 지원한다.
 
 중요 옵션:
 

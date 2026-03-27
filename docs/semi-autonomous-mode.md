@@ -1,6 +1,6 @@
 # Semi-Autonomous Mode
 
-이 저장소는 완전 자율형 agent runtime이 아니라, `ad-fashion-forum`을 위한 `semi-autonomous decision studio`로 운영한다.
+이 저장소는 완전 자율형 agent runtime이 아니라, `AI-Fashion-Forum`을 위한 `semi-autonomous decision studio`로 운영한다.
 
 ## What Gets Automated
 
@@ -24,8 +24,8 @@
 ```bash
 source .venv/bin/activate
 python scripts/pipeline/run_studio.py \
-  --repo Jongtae/ad-fashion-forum \
-  --source-dir /Users/jongtaelee/Documents/ad-fashion-forum \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
   --rounds 1
 ```
 

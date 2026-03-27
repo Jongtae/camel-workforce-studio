@@ -29,11 +29,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout ad-fashion-forum
+      - name: Checkout AI-Fashion-Forum
         uses: actions/checkout@v4
         with:
-          repository: Jongtae/ad-fashion-forum
-          path: ../ad-fashion-forum
+          repository: Jongtae/AI-Fashion-Forum
+          path: ../AI-Fashion-Forum
           token: ${{ secrets.WORKFORCE_GH_TOKEN }}
 
       - name: Set up Python
@@ -68,7 +68,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GH_TOKEN: ${{ secrets.WORKFORCE_GH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.WORKFORCE_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 최신 handoff 발견
           LATEST_HANDOFF=$(find scripts/requirement-debate/outputs -type f -name "handoff.md" -printf '%T@ %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
@@ -85,8 +85,8 @@ jobs:
 
           # run_studio.py 실행 (--approve-issue 포함)
           python scripts/pipeline/run_studio.py \
-            --repo Jongtae/ad-fashion-forum \
-            --source-dir ../ad-fashion-forum \
+            --repo Jongtae/AI-Fashion-Forum \
+            --source-dir ../AI-Fashion-Forum \
             --rounds 1 \
             --create-issue \
             --approve-issue \
@@ -123,5 +123,5 @@ jobs:
           echo ""
           echo "📍 생성된 Issue:"
           if [ -f "context/history/run-ledger.jsonl" ]; then
-            tail -1 context/history/run-ledger.jsonl | jq '.issue_url' 2>/dev/null || echo "ad-fashion-forum 저장소 확인"
+            tail -1 context/history/run-ledger.jsonl | jq '.issue_url' 2>/dev/null || echo "AI-Fashion-Forum 저장소 확인"
           fi

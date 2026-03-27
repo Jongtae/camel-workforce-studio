@@ -1,13 +1,13 @@
 # camel-workforce-studio
 
-`camel-workforce-studio`는 범용 CAMEL 데모 레포가 아니라, [ad-fashion-forum](https://github.com/Jongtae/ad-fashion-forum)을 위한 companion decision workspace입니다. 이 저장소는 제품 본체를 구현하는 대신, GitHub issue, GitHub PR, 외부 리포트, progress log, 이전 논의 결과를 정규화해서 여러 workforce 토론으로 넘기고, 그 결과를 다시 다음 논의나 GitHub handoff로 연결하는 역할을 맡습니다.
+`camel-workforce-studio`는 범용 CAMEL 데모 레포가 아니라, [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision workspace입니다. 이 저장소는 제품 본체를 구현하는 대신, GitHub issue, GitHub PR, 외부 리포트, progress log, 이전 논의 결과를 정규화해서 여러 workforce 토론으로 넘기고, 그 결과를 다시 다음 논의나 GitHub handoff로 연결하는 역할을 맡습니다.
 
 핵심 흐름은 `Context Builder -> Commitment/Development/Operator/Society Workforce -> Handoff`입니다. 즉 topic 하나만 던지는 토론기보다, “지금 무엇이 막혀 있고 다음에 어느 workforce가 무엇을 결정해야 하는가”를 구조적으로 다루는 companion repo에 가깝습니다.
 
 ## Workforce Model
 
 - `commitment`: 현재 상태의 gap을 읽고 다음 workforce와 topic을 결정합니다.
-- `core`: 내부 키는 `core`지만, 사용자-facing으로는 `ad-fashion-forum`을 실제 서비스로 전환하는 `development` 팀입니다.
+- `core`: 내부 키는 `core`지만, 사용자-facing으로는 `AI-Fashion-Forum`을 실제 서비스로 전환하는 `development` 팀입니다.
 - `operator`: 포럼 운영자로서 컨텐츠 자정, 모니터링, 기능 개선사항 도출을 담당합니다.
 - `society`: API 기반 forum 위에서 action하는 stateful AI agent의 상태, 기억, characteristic, 내부/외부 콘텐츠 소비 규칙을 설계합니다.
 - `default`: 어느 특화 workforce에도 바로 맞지 않는 환경 설계를 다룹니다.
@@ -74,7 +74,7 @@ export OPENAI_API_KEY=your_key_here
 ### 2. Build context packs
 
 ```bash
-python3 scripts/context-builder/build_context.py --repo Jongtae/ad-fashion-forum
+python3 scripts/context-builder/build_context.py --repo Jongtae/AI-Fashion-Forum
 ```
 
 ### 3. Run commitment and hand off automatically
@@ -89,27 +89,27 @@ python3 scripts/requirement-debate/commitment_debate.py \
 
 ```bash
 python3 scripts/pipeline/run_studio.py \
-  --repo Jongtae/ad-fashion-forum \
-  --source-dir /Users/jongtaelee/Documents/ad-fashion-forum \
-  --sim-results-dir /Users/jongtaelee/Documents/ad-fashion-forum/path/to/sim-results \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
+  --sim-results-dir /Users/jongtaelee/Documents/AI-Fashion-Forum/path/to/sim-results \
   --rounds 1
 ```
 
 이 모드는 아래를 순서대로 수행합니다.
 
-- ad-fashion-forum 로컬 repo의 git 상태, 최근 커밋, 변경 파일을 읽음
+- AI-Fashion-Forum 로컬 repo의 git 상태, 최근 커밋, 변경 파일을 읽음
 - GitHub issue, open/merged PR, 로컬 report/progress, 선택적 sim-results를 합쳐 context pack 생성
 - 최신 workforce handoff가 있으면 자동으로 commitment 입력에 포함
 - commitment 실행 후 선택된 다음 workforce까지 연쇄 실행
 
-`--sim-results-dir`는 ad-fashion-forum 실험 산출물이 들어 있는 로컬 경로를 가리킵니다. 지정하지 않아도 `build_context.py`가 source repo 안의 표준 후보 경로를 자동 탐색합니다.
+`--sim-results-dir`는 AI-Fashion-Forum 실험 산출물이 들어 있는 로컬 경로를 가리킵니다. 지정하지 않아도 `build_context.py`가 source repo 안의 표준 후보 경로를 자동 탐색합니다.
 
-### 3-2. Run and issue ad-fashion-forum issues
+### 3-2. Run and issue AI-Fashion-Forum issues
 
 ```bash
 python3 scripts/pipeline/run_studio.py \
-  --repo Jongtae/ad-fashion-forum \
-  --source-dir /Users/jongtaelee/Documents/ad-fashion-forum \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
   --rounds 1 \
   --create-issue \
   --issue-type bundle \
@@ -158,7 +158,7 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - `next_questions.md`: 후속 논의 질문
 - `round_summary.md`: 라운드별 정리
 - `metadata.json`: 실행 메타데이터
-- `sim_results.md`: 선택적 ad-fashion-forum 실험 산출물 정규화본
+- `sim_results.md`: 선택적 AI-Fashion-Forum 실험 산출물 정규화본
 - `society_output_contract.json`: 최신 society 결정을 구조화한 계약 파일
 - `issue_plan.md`: issue-ready일 때 생성되는 발급 초안
 - `context/history/run-ledger.jsonl`: 실행과 발급된 issue를 연결하는 ledger
@@ -169,9 +169,9 @@ python3 scripts/requirement-debate/bridge_debate.py \
 
 ## Issue Issuance
 
-이 저장소는 결과를 `ad-fashion-forum` 쪽 GitHub issue로 보낼 수 있습니다.
+이 저장소는 결과를 `AI-Fashion-Forum` 쪽 GitHub issue로 보낼 수 있습니다.
 
-- 기본 대상 repo: `Jongtae/ad-fashion-forum`
+- 기본 대상 repo: `Jongtae/AI-Fashion-Forum`
 - 대상 변경: `--issue-repo owner/repo`
 - 발급 유형: `--issue-type single|task|epic|sprint|bundle`
 - 추가 label: `--issue-label`
@@ -181,8 +181,8 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - 담당자 배정: `--issue-assignee`, `--task-assignee`
 - sprint 묶음 생성: `--with-sprint`
 
-GitHub Actions 스케줄 워크플로는 매일 오후 10시(KST) 기준으로 자동 실행되도록 설정할 수 있으며, `ad-fashion-forum`이 기본 발급 대상입니다.
-GitHub Actions에서 `ad-fashion-forum`에 issue를 실제로 생성하려면 `secrets.WORKFORCE_GH_TOKEN`(대상 repo 접근 권한이 있는 PAT 또는 GitHub App 토큰)과 `secrets.OPENAI_API_KEY`가 필요합니다.
+GitHub Actions 스케줄 워크플로는 매일 오후 10시(KST) 기준으로 자동 실행되도록 설정할 수 있으며, `AI-Fashion-Forum`이 기본 발급 대상입니다.
+GitHub Actions에서 `AI-Fashion-Forum`에 issue를 실제로 생성하려면 `secrets.WORKFORCE_GH_TOKEN`(대상 repo 접근 권한이 있는 PAT 또는 GitHub App 토큰)과 `secrets.OPENAI_API_KEY`가 필요합니다.
 
 주의:
 - GitHub Project 추가는 `gh auth refresh -s project` 권한이 없으면 자동으로 생략됩니다.
@@ -213,7 +213,7 @@ GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 - [agent.md](agent.md): Codex 및 일반 coding agent용 저장소 운영 가이드
 - [CLAUDE.md](CLAUDE.md): Claude Code용 저장소 운영 가이드
 - [docs/project-history-and-playbook.md](docs/project-history-and-playbook.md): 왜 이 저장소를 만들었는지, 어떤 시행착오가 있었는지, 다음 사람이 어떻게 이어받아야 하는지
-- [docs/ai-fashion-forum-readiness-scorecard.md](docs/ai-fashion-forum-readiness-scorecard.md): ad-fashion-forum 실전 활용 가능 판정 기준
+- [docs/ai-fashion-forum-readiness-scorecard.md](docs/ai-fashion-forum-readiness-scorecard.md): AI-Fashion-Forum 실전 활용 가능 판정 기준
 - [docs/iteration-log.md](docs/iteration-log.md): iteration별 튜닝 기록과 점수 변화
 - [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md): workforce 간 전달 규약
 - [docs/society-output-schema.md](docs/society-output-schema.md): society workforce 결과를 JSON/YAML 계약으로 재사용하는 규약
