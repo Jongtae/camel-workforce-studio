@@ -2,6 +2,7 @@
 """Run the studio in a semi-autonomous mode."""
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -20,8 +21,17 @@ from workforce_artifacts import discover_latest_handoff
 
 
 def default_source_dir() -> str:
-    candidate = ROOT_DIR.parent / "AI-Fashion-Forum"
-    return str(candidate)
+    ad_fashion_forum = ROOT_DIR.parent / "ad-fashion-forum"
+    if ad_fashion_forum.exists():
+        return str(ad_fashion_forum)
+    legacy_ai_fashion_forum = ROOT_DIR.parent / "AI-Fashion-Forum"
+    if legacy_ai_fashion_forum.exists():
+        return str(legacy_ai_fashion_forum)
+    return str(ad_fashion_forum)
+
+
+def default_issue_repo() -> str:
+    return os.environ.get("WORKFORCE_TARGET_REPO", "Jongtae/ad-fashion-forum")
 
 
 def run_command(args: list[str]) -> None:
@@ -37,7 +47,7 @@ def main() -> None:
     parser.add_argument(
         "--repo",
         type=str,
-        default="Jongtae/AI-Fashion-Forum",
+        default=default_issue_repo(),
         help="GitHub repository slug to summarize",
     )
     parser.add_argument(
@@ -50,7 +60,7 @@ def main() -> None:
         "--sim-results-dir",
         type=str,
         default=None,
-        help="Optional local directory containing AI-Fashion-Forum simulation results",
+        help="Optional local directory containing ad-fashion-forum simulation results",
     )
     parser.add_argument(
         "--rounds",

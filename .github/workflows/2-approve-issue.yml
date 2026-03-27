@@ -1,0 +1,127 @@
+name: "2️⃣ Approve & Create Issues"
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_milestone:
+        description: "Issue milestone (예: Sprint 1 - Identity Loop)"
+        required: false
+      issue_project:
+        description: "Issue project 제목"
+        required: false
+      task_assignees:
+        description: "Task 담당자 (쉼표로 구분, 예: jongtae,alice)"
+        required: false
+
+jobs:
+  approve-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout ad-fashion-forum
+        uses: actions/checkout@v4
+        with:
+          repository: Jongtae/ad-fashion-forum
+          path: ../ad-fashion-forum
+          token: ${{ secrets.WORKFORCE_GH_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Find Latest Output
+        id: find-latest
+        run: |
+          LATEST_OUTPUT=$(find scripts/requirement-debate/outputs -type f -name "issue_plan.md" -printf '%T@ %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
+          echo "latest_output=$LATEST_OUTPUT" >> $GITHUB_OUTPUT
+          echo "Latest issue_plan.md: $LATEST_OUTPUT"
+
+      - name: Validate Issue Plan
+        run: |
+          if [ -f "${{ steps.find-latest.outputs.latest_output }}" ]; then
+            echo "✅ issue_plan.md 발견"
+            head -50 "${{ steps.find-latest.outputs.latest_output }}"
+          else
+            echo "❌ issue_plan.md를 찾을 수 없습니다"
+            exit 1
+          fi
+
+      - name: Approve & Create Issues
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ secrets.WORKFORCE_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.WORKFORCE_GH_TOKEN }}
+        run: |
+          # 최신 handoff 발견
+          LATEST_HANDOFF=$(find scripts/requirement-debate/outputs -type f -name "handoff.md" -printf '%T@ %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
+
+          # 최신 산출물 디렉토리 추출
+          LATEST_DIR=$(dirname "${{ steps.find-latest.outputs.latest_output }}")
+
+          # issue_plan.md에서 issue_type, epic_label 추출
+          ISSUE_TYPE=$(grep -m1 "^Issue Type:" "${{ steps.find-latest.outputs.latest_output }}" | sed 's/.*: //' | tr -d '[:space:]' || echo "bundle")
+          EPIC_LABEL=$(grep -m1 "^Epic Label:" "${{ steps.find-latest.outputs.latest_output }}" | sed 's/.*: //' || echo "")
+
+          echo "Issue Type: $ISSUE_TYPE"
+          echo "Epic Label: $EPIC_LABEL"
+
+          # run_studio.py 실행 (--approve-issue 포함)
+          python scripts/pipeline/run_studio.py \
+            --repo Jongtae/ad-fashion-forum \
+            --source-dir ../ad-fashion-forum \
+            --rounds 1 \
+            --create-issue \
+            --approve-issue \
+            --issue-type "$ISSUE_TYPE" \
+            --no-run-next \
+            ${{ inputs.issue_milestone && format('--issue-milestone "{0}"', inputs.issue_milestone) || '' }} \
+            ${{ inputs.issue_project && format('--issue-project "{0}"', inputs.issue_project) || '' }} \
+            ${{ inputs.task_assignees && format('$(echo "{0}" | sed "s/,/ --task-assignee /g" | sed "s/^/--task-assignee /")' , inputs.task_assignees) || '' }} \
+            $([ -n "$EPIC_LABEL" ] && echo "--epic-label $EPIC_LABEL" || echo "")
+
+      - name: Verify Issue Creation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # run-ledger 확인
+          if [ -f "context/history/run-ledger.jsonl" ]; then
+            echo "✅ Issue 발급 기록:"
+            tail -5 context/history/run-ledger.jsonl | jq '.' 2>/dev/null || tail -5 context/history/run-ledger.jsonl
+          fi
+
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-creation-outputs
+          path: |
+            scripts/requirement-debate/outputs/
+            context/history/run-ledger.jsonl
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "✅ Issue 발급 완료"
+          echo ""
+          echo "📍 생성된 Issue:"
+          if [ -f "context/history/run-ledger.jsonl" ]; then
+            tail -1 context/history/run-ledger.jsonl | jq '.issue_url' 2>/dev/null || echo "ad-fashion-forum 저장소 확인"
+          fi
