@@ -1,0 +1,21 @@
+version: 1
+source_run_dir: ""
+decision_path: ""
+export_path: ""
+issue_title: ""
+summary: []
+acceptance_criteria: []
+technical_notes: []
+open_questions: []
+priority: High
+agent_seed:
+  identity: ""
+  memory_initial: ""
+  characteristic: ""
+action_loop: ""
+state_model: ""
+state_transitions: ""
+memory_writeback_rules: ""
+action_selection_links: ""
+content_consumption: ""
+required_backend_artifacts: ""

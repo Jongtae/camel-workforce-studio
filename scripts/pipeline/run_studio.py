@@ -47,6 +47,12 @@ def main() -> None:
         help="Local source repository path for git situation checks",
     )
     parser.add_argument(
+        "--sim-results-dir",
+        type=str,
+        default=None,
+        help="Optional local directory containing AI-Fashion-Forum simulation results",
+    )
+    parser.add_argument(
         "--rounds",
         type=int,
         default=1,
@@ -147,6 +153,8 @@ def main() -> None:
         "--source-dir",
         args.source_dir,
     ]
+    if args.sim_results_dir:
+        build_context_cmd.extend(["--sim-results-dir", args.sim_results_dir])
     run_command(build_context_cmd)
 
     handoff_path = args.handoff

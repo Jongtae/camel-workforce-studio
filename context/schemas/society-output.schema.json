@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Jongtae/camel-workforce-studio/context/schemas/society-output.schema.json",
+  "title": "Society Output Contract",
+  "type": "object",
+  "required": [
+    "version",
+    "source_run_dir",
+    "decision_path",
+    "issue_title",
+    "summary",
+    "acceptance_criteria",
+    "technical_notes",
+    "open_questions",
+    "priority",
+    "agent_seed",
+    "action_loop",
+    "state_model",
+    "state_transitions",
+    "memory_writeback_rules",
+    "action_selection_links",
+    "content_consumption",
+    "required_backend_artifacts"
+  ],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "source_run_dir": { "type": "string" },
+    "decision_path": { "type": "string" },
+    "export_path": { "type": "string" },
+    "issue_title": { "type": "string" },
+    "summary": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "technical_notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["High", "Medium", "Low", "unknown"]
+    },
+    "agent_seed": {
+      "type": "object",
+      "required": ["identity", "memory_initial", "characteristic"],
+      "properties": {
+        "identity": { "type": "string" },
+        "memory_initial": { "type": "string" },
+        "characteristic": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "action_loop": { "type": "string" },
+    "state_model": { "type": "string" },
+    "state_transitions": { "type": "string" },
+    "memory_writeback_rules": { "type": "string" },
+    "action_selection_links": { "type": "string" },
+    "content_consumption": { "type": "string" },
+    "required_backend_artifacts": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": true
+}

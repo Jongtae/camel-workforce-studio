@@ -116,6 +116,7 @@ issue를 발급한 run은 반드시 `context/history/run-ledger.jsonl`에 기록
 다음 `build_context.py` 실행은 이 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`로 다시 정규화해야 한다.
 같은 실행에서 open PR과 최근 merged PR도 `context/normalized/active_pull_requests.md`, `context/normalized/recent_merged_pull_requests.md`로 정규화해야 한다.
 GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용해야 한다.
+`context-builder`는 선택적으로 AI-Fashion-Forum의 sim-results를 읽어 `context/normalized/sim_results.md`와 `context/normalized/society_output_contract.json`으로 정규화해야 한다.
 
 ## Society Quality Bar
 

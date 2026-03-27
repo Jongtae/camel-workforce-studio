@@ -398,6 +398,24 @@ def discover_latest_run(output_dir: Path) -> Optional[Path]:
     return run_dirs[0] if run_dirs else None
 
 
+def discover_latest_run_for_workforce(output_dir: Path, workforce_key: str) -> Optional[Path]:
+    if not output_dir.exists():
+        return None
+
+    run_dirs = sorted([path for path in output_dir.iterdir() if path.is_dir()], reverse=True)
+    for run_dir in run_dirs:
+        metadata_path = run_dir / "metadata.json"
+        if not metadata_path.exists():
+            continue
+        try:
+            payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if payload.get("workforce") == workforce_key:
+            return run_dir
+    return None
+
+
 def discover_latest_handoff(output_dir: Path) -> Optional[Path]:
     latest_run = discover_latest_run(output_dir)
     if not latest_run:

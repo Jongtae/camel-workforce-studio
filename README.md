@@ -14,7 +14,7 @@
 
 ## Operating Flow
 
-1. `scripts/context-builder/build_context.py`가 GitHub issue, GitHub PR, 외부 리포트, progress log를 읽어 `context/workflow-inputs/*.md`를 만듭니다.
+1. `scripts/context-builder/build_context.py`가 GitHub issue, GitHub PR, 외부 리포트, progress log, 선택적 sim-results를 읽어 `context/workflow-inputs/*.md`를 만듭니다.
 2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다.
 3. 선택된 workforce가 handoff와 context pack을 함께 읽고 토론합니다.
 4. 각 실행은 `decision.md`, `handoff.md`, `next_questions.md`, `round_summary.md`, `full_report.md`를 남깁니다.
@@ -91,15 +91,18 @@ python3 scripts/requirement-debate/commitment_debate.py \
 python3 scripts/pipeline/run_studio.py \
   --repo Jongtae/AI-Fashion-Forum \
   --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
+  --sim-results-dir /Users/jongtaelee/Documents/AI-Fashion-Forum/path/to/sim-results \
   --rounds 1
 ```
 
 이 모드는 아래를 순서대로 수행합니다.
 
 - AI-Fashion-Forum 로컬 repo의 git 상태, 최근 커밋, 변경 파일을 읽음
-- GitHub issue, open/merged PR, 로컬 report/progress를 합쳐 context pack 생성
+- GitHub issue, open/merged PR, 로컬 report/progress, 선택적 sim-results를 합쳐 context pack 생성
 - 최신 workforce handoff가 있으면 자동으로 commitment 입력에 포함
 - commitment 실행 후 선택된 다음 workforce까지 연쇄 실행
+
+`--sim-results-dir`는 AI-Fashion-Forum 실험 산출물이 들어 있는 로컬 경로를 가리킵니다. 지정하지 않아도 `build_context.py`가 source repo 안의 표준 후보 경로를 자동 탐색합니다.
 
 ### 3-2. Run and issue AI-Fashion-Forum issues
 
@@ -155,6 +158,8 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - `next_questions.md`: 후속 논의 질문
 - `round_summary.md`: 라운드별 정리
 - `metadata.json`: 실행 메타데이터
+- `sim_results.md`: 선택적 AI-Fashion-Forum 실험 산출물 정규화본
+- `society_output_contract.json`: 최신 society 결정을 구조화한 계약 파일
 - `issue_plan.md`: issue-ready일 때 생성되는 발급 초안
 - `context/history/run-ledger.jsonl`: 실행과 발급된 issue를 연결하는 ledger
 - `context/normalized/active_pull_requests.md`: 현재 open PR 정규화
@@ -208,6 +213,7 @@ GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 - [docs/ai-fashion-forum-readiness-scorecard.md](docs/ai-fashion-forum-readiness-scorecard.md): AI-Fashion-Forum 실전 활용 가능 판정 기준
 - [docs/iteration-log.md](docs/iteration-log.md): iteration별 튜닝 기록과 점수 변화
 - [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md): workforce 간 전달 규약
+- [docs/society-output-schema.md](docs/society-output-schema.md): society workforce 결과를 JSON/YAML 계약으로 재사용하는 규약
 
 ## Semi-Autonomous Boundary
 

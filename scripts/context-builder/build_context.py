@@ -4,6 +4,7 @@
 import argparse
 import json
 import subprocess
+from shutil import copy2
 from pathlib import Path
 import sys
 from typing import Iterable, List
@@ -19,7 +20,14 @@ REQUIREMENT_DEBATE_DIR = ROOT_DIR / "scripts" / "requirement-debate"
 if str(REQUIREMENT_DEBATE_DIR) not in sys.path:
     sys.path.insert(0, str(REQUIREMENT_DEBATE_DIR))
 
-from workforce_artifacts import load_run_ledger, summarize_latest_run
+from workforce_artifacts import (
+    discover_latest_run_for_workforce,
+    first_section,
+    load_run_ledger,
+    summarize_latest_run,
+    bullet_lines,
+    markdown_sections,
+)
 
 
 WORKFLOW_OBJECTIVES = {
@@ -35,7 +43,9 @@ def ensure_dirs() -> None:
         RAW_DIR / "github",
         RAW_DIR / "reports",
         RAW_DIR / "progress",
+        RAW_DIR / "sim-results",
         CONTEXT_DIR / "history",
+        CONTEXT_DIR / "schemas",
         NORMALIZED_DIR,
         WORKFLOW_INPUTS_DIR,
     ]:
@@ -319,6 +329,51 @@ def collect_progress_logs() -> list:
     return items
 
 
+def collect_sim_results(sim_results_dir: Path | None) -> list:
+    if sim_results_dir is None or not sim_results_dir.exists():
+        return []
+
+    destination_root = RAW_DIR / "sim-results"
+    items = []
+    for path in sorted(sim_results_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() not in {".json", ".yaml", ".yml", ".md", ".txt", ".log"}:
+            continue
+
+        relative = path.relative_to(sim_results_dir)
+        destination = destination_root / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        copy2(path, destination)
+
+        item = {"name": relative.name, "path": str(destination), "relative_path": str(relative)}
+        if path.suffix.lower() == ".json":
+            try:
+                item["entry"] = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                item["text"] = path.read_text(encoding="utf-8", errors="ignore")
+        else:
+            item["text"] = path.read_text(encoding="utf-8", errors="ignore")
+        items.append(item)
+    return items
+
+
+def discover_sim_results_dir(source_dir: Path) -> Path | None:
+    candidates = [
+        source_dir / "sim-results",
+        source_dir / "sim_results",
+        source_dir / "results" / "sim",
+        source_dir / "reports" / "sim-results",
+        source_dir / "docs" / "sim-results",
+        source_dir / "artifacts" / "sim-results",
+        source_dir / "context" / "sim-results",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def trim(text: str, max_lines: int = 12) -> str:
     lines = [line.rstrip() for line in text.splitlines() if line.strip()]
     return "\n".join(lines[:max_lines]).strip()
@@ -558,6 +613,30 @@ def render_external_report_briefs(reports: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def render_sim_results(sim_results: list) -> str:
+    lines = ["# Sim Results", ""]
+    if not sim_results:
+        lines.append("- No sim result files were collected.")
+        return "\n".join(lines) + "\n"
+
+    for item in sim_results:
+        lines.append(f"## {item['relative_path']}")
+        entry = item.get("entry")
+        if entry is not None:
+            if isinstance(entry, dict):
+                for key, value in entry.items():
+                    lines.append(f"- {key}: {value}")
+            elif isinstance(entry, list):
+                for value in entry:
+                    lines.append(f"- {value}")
+            else:
+                lines.append(f"- {entry}")
+        else:
+            lines.append(trim(item.get("text", ""), max_lines=12) or "- Empty sim result")
+        lines.append("")
+    return "\n".join(lines).strip() + "\n"
+
+
 def render_open_questions(issues: list, progress_items: list, pull_requests: dict) -> str:
     lines = ["# Open Questions", ""]
     open_prs = pull_requests.get("open", [])
@@ -619,10 +698,94 @@ def render_latest_workforce_state(latest_workforce_state: str) -> str:
     return latest_workforce_state.strip() + ("\n" if latest_workforce_state else "")
 
 
+def render_society_output_contract(contract: dict) -> str:
+    lines = ["# Society Output Contract", ""]
+    if not contract.get("exists"):
+        lines.append("- No society run artifacts were found.")
+        return "\n".join(lines) + "\n"
+
+    lines.extend(
+        [
+            f"- Source Run Dir: {contract.get('source_run_dir', '')}",
+            f"- Source Decision: {contract.get('decision_path', '')}",
+            f"- Export Path: {contract.get('export_path', '')}",
+            "",
+            "## Agent Seed",
+        ]
+    )
+    agent_seed = contract.get("agent_seed", {})
+    for key, value in agent_seed.items():
+        lines.append(f"- {key}: {value}")
+
+    for section_name in [
+        "action_loop",
+        "state_model",
+        "memory_writeback_rules",
+        "action_selection_links",
+        "content_consumption",
+        "required_backend_artifacts",
+    ]:
+        section = contract.get(section_name, {})
+        lines.extend(["", f"## {section_name}"])
+        if isinstance(section, dict):
+            for key, value in section.items():
+                lines.append(f"- {key}: {value}")
+        else:
+            lines.append(f"- {section}")
+
+    return "\n".join(lines).strip() + "\n"
+
+
 def write_normalized_file(name: str, content: str) -> Path:
     path = NORMALIZED_DIR / name
     path.write_text(content, encoding="utf-8")
     return path
+
+
+def write_json_file(name: str, payload: dict) -> Path:
+    path = NORMALIZED_DIR / name
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def build_society_output_contract(output_dir: Path) -> dict:
+    latest_society_run = discover_latest_run_for_workforce(output_dir, "society")
+    if not latest_society_run:
+        return {"exists": False}
+
+    decision_path = latest_society_run / "decision.md"
+    if not decision_path.exists():
+        return {"exists": False}
+
+    decision_text = decision_path.read_text(encoding="utf-8", errors="ignore")
+    sections = markdown_sections(decision_text)
+    export = {
+        "exists": True,
+        "version": 1,
+        "source_run_dir": str(latest_society_run),
+        "decision_path": str(decision_path),
+        "issue_title": first_section(decision_text, "Issue Title").splitlines()[0].strip() if first_section(decision_text, "Issue Title") else "",
+        "summary": bullet_lines(first_section(decision_text, "Summary")),
+        "acceptance_criteria": bullet_lines(first_section(decision_text, "Acceptance Criteria")),
+        "technical_notes": bullet_lines(first_section(decision_text, "Technical Notes")),
+        "open_questions": bullet_lines(first_section(decision_text, "Open Questions")),
+        "priority": first_section(decision_text, "Priority").splitlines()[0].strip() if first_section(decision_text, "Priority") else "",
+        "agent_seed": {
+            "identity": sections.get("State Model", ""),
+            "memory_initial": sections.get("Memory Writeback Rules", ""),
+            "characteristic": sections.get("State Model", ""),
+        },
+        "action_loop": sections.get("Action Loop", ""),
+        "state_model": sections.get("State Model", ""),
+        "state_transitions": sections.get("State Transitions", ""),
+        "memory_writeback_rules": sections.get("Memory Writeback Rules", ""),
+        "action_selection_links": sections.get("Action Selection Links", ""),
+        "content_consumption": sections.get("Content Consumption", ""),
+        "required_backend_artifacts": sections.get("Required Backend Artifacts", ""),
+    }
+    export_path = NORMALIZED_DIR / "society_output_contract.json"
+    export["export_path"] = str(export_path)
+    return export
 
 
 def build_workflow_input(workforce: str, normalized: dict) -> str:
@@ -667,6 +830,12 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## External Evidence
 {normalized['external_report_briefs']}
 
+## Sim Results
+{normalized['sim_results']}
+
+## Society Output Contract
+{normalized['society_output_contract']}
+
 ## Open Questions
 {normalized['open_questions']}
 
@@ -698,6 +867,12 @@ def main() -> None:
         default=default_source_dir(),
         help="상황을 읽을 로컬 source repository 경로",
     )
+    parser.add_argument(
+        "--sim-results-dir",
+        type=str,
+        default=None,
+        help="AI-Fashion-Forum 실험 산출물을 읽을 로컬 디렉터리 경로",
+    )
     args = parser.parse_args()
 
     ensure_dirs()
@@ -706,10 +881,13 @@ def main() -> None:
     pull_requests = collect_github_pull_requests(args.repo)
     reports = collect_reports()
     progress_items = collect_progress_logs()
+    sim_results_dir = Path(args.sim_results_dir) if args.sim_results_dir else discover_sim_results_dir(Path(args.source_dir))
+    sim_results = collect_sim_results(sim_results_dir)
     source_state = collect_source_repo_state(Path(args.source_dir))
     source_intent = collect_source_repo_intent(Path(args.source_dir))
     latest_workforce_state = summarize_latest_run(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
     issue_execution_history = collect_issue_execution_history()
+    society_output_contract = build_society_output_contract(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
     normalized = {
         "current_situation": render_current_situation(
@@ -725,6 +903,8 @@ def main() -> None:
         "recent_merged_pull_requests": render_recent_merged_pull_requests(pull_requests),
         "recent_progress": render_recent_progress(progress_items),
         "external_report_briefs": render_external_report_briefs(reports),
+        "sim_results": render_sim_results(sim_results),
+        "society_output_contract": render_society_output_contract(society_output_contract),
         "open_questions": render_open_questions(issues, progress_items, pull_requests),
     }
 
@@ -740,9 +920,12 @@ def main() -> None:
         ("recent_merged_pull_requests.md", normalized["recent_merged_pull_requests"]),
         ("recent_progress.md", normalized["recent_progress"]),
         ("external_report_briefs.md", normalized["external_report_briefs"]),
+        ("sim_results.md", normalized["sim_results"]),
+        ("society_output_contract.md", normalized["society_output_contract"]),
         ("open_questions.md", normalized["open_questions"]),
     ]:
         write_normalized_file(filename, content)
+    write_json_file("society_output_contract.json", society_output_contract)
 
     for workforce in WORKFLOW_OBJECTIVES:
         path = WORKFLOW_INPUTS_DIR / f"{workforce}.md"
