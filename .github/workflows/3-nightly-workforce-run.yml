@@ -2,7 +2,7 @@ name: "3️⃣ Nightly Workforce Run & Issue Registration (AI-Fashion-Forum)"
 
 on:
   schedule:
-    - cron: "0 13 * * *"
+    - cron: "9 13 * * *"
   workflow_dispatch:
     inputs:
       rounds:
