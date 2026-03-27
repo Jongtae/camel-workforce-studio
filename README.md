@@ -181,7 +181,6 @@ python3 scripts/requirement-debate/bridge_debate.py \
 - 담당자 배정: `--issue-assignee`, `--task-assignee`
 - sprint 묶음 생성: `--with-sprint`
 
-GitHub Actions 스케줄 워크플로는 매일 오후 10시 9분(KST) 기준으로 자동 실행되도록 설정할 수 있으며, `AI-Fashion-Forum`이 기본 발급 대상입니다.
 GitHub Actions에서 `AI-Fashion-Forum`에 issue를 실제로 생성하려면 `secrets.WORKFORCE_GH_TOKEN`(대상 repo 접근 권한이 있는 PAT 또는 GitHub App 토큰)과 `secrets.OPENAI_API_KEY`가 필요합니다.
 
 주의:
