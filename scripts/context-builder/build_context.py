@@ -159,7 +159,7 @@ def collect_issue_snapshot(repo: str, issue_number: int) -> dict:
             "--repo",
             repo,
             "--json",
-            "number,title,state,closedAt,url,labels,assignees",
+            "number,title,state,closedAt,url,labels,assignees,comments",
         ],
         capture_output=True,
         text=True,
@@ -740,6 +740,98 @@ def render_issue_execution_history(history: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def summarize_thread_comment(issue_state: dict) -> str:
+    comments = issue_state.get("comments", [])
+    if not comments:
+        return ""
+    latest_comment = comments[-1]
+    body = str(latest_comment.get("body", "")).strip()
+    if not body:
+        return ""
+    excerpt_lines = []
+    for raw_line in body.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("## "):
+            continue
+        excerpt_lines.append(line)
+        if len(excerpt_lines) >= 3:
+            break
+    excerpt = " ".join(excerpt_lines)
+    return trim(excerpt, max_lines=2) if excerpt else ""
+
+
+def render_issue_thread_summary(history: list) -> str:
+    lines = ["# Issue Thread Summary", ""]
+    if not history:
+        lines.append("- No run-linked issue threads were found.")
+        return "\n".join(lines) + "\n"
+
+    for entry in history[:12]:
+        lines.extend(
+            [
+                f"## {entry.get('recorded_at', 'unknown time')}",
+                f"- Workforce: {entry.get('workforce', 'unknown')}",
+                f"- Topic: {entry.get('topic', 'unknown')}",
+                f"- Issue Status: {entry.get('issue_status', 'unknown')}",
+            ]
+        )
+        issue_states = entry.get("issue_states", [])
+        if issue_states:
+            for state in issue_states:
+                labels = ", ".join(label["name"] for label in state.get("labels", [])) or "no labels"
+                assignees = ", ".join(
+                    assignee.get("login", "") for assignee in state.get("assignees", [])
+                ) or "unassigned"
+                thread_state = str(state.get("state", "")).upper() or "UNKNOWN"
+                lines.append(
+                    f"- Thread Issue #{state.get('number')} {state.get('title')} [{thread_state}] "
+                    f"(assignees: {assignees}; labels: {labels})"
+                )
+                comment_excerpt = summarize_thread_comment(state)
+                if comment_excerpt:
+                    lines.append(f"  - Latest Comment Excerpt: {comment_excerpt}")
+        else:
+            lines.append("- No linked issue snapshot was available.")
+
+        decision_summary = ""
+        run_dir = Path(str(entry.get("run_dir", "")))
+        if run_dir.exists():
+            decision_path = run_dir / "decision.md"
+            reflection_path = run_dir / "reflection.md"
+            if decision_path.exists():
+                decision_summary = first_section(
+                    decision_path.read_text(encoding="utf-8"),
+                    "Summary",
+                    "Key Decisions",
+                    "Required Decisions",
+                )
+            reflection_summary = ""
+            if reflection_path.exists():
+                reflection_summary = first_section(
+                    reflection_path.read_text(encoding="utf-8"),
+                    "What Worked",
+                    "What Is Still Blocked",
+                    "Continuation Hint",
+                )
+            if decision_summary:
+                lines.append(f"- Latest Decision Summary: {trim(decision_summary, max_lines=3)}")
+            if reflection_summary:
+                lines.append(f"- Latest Reflection Hint: {trim(reflection_summary, max_lines=3)}")
+        lines.append("")
+
+    lines.extend(
+        [
+            "## Commitment Use",
+            "- Use this summary as the first memory layer when deciding whether a topic is truly new or a continuation.",
+            "- Prefer continuation comments and follow-up reasoning over re-opening a closed thread as a brand-new ticket.",
+            "- If the summary already shows the same issue family has been explored, route to the next workforce or append continuation context instead of restarting from scratch.",
+        ]
+    )
+    return "\n".join(lines).strip() + "\n"
+
+
 def render_latest_workforce_state(latest_workforce_state: str) -> str:
     return latest_workforce_state.strip() + ("\n" if latest_workforce_state else "")
 
@@ -861,6 +953,9 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Issue Execution History
 {normalized['issue_execution_history']}
 
+## Issue Thread Summary
+{normalized['issue_thread_summary']}
+
 ## Closed Society Backlog
 {normalized['closed_society_backlog']}
 
@@ -937,6 +1032,7 @@ def main() -> None:
     latest_workforce_state = summarize_latest_run(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
     issue_execution_history = collect_issue_execution_history()
     closed_society_backlog = render_closed_society_backlog(issue_execution_history)
+    issue_thread_summary = render_issue_thread_summary(issue_execution_history)
     society_output_contract = build_society_output_contract(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
     normalized = {
@@ -948,6 +1044,7 @@ def main() -> None:
         "source_repo_state": render_source_repo_state(source_state),
         "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
         "issue_execution_history": render_issue_execution_history(issue_execution_history),
+        "issue_thread_summary": issue_thread_summary,
         "closed_society_backlog": closed_society_backlog,
         "active_issues": render_active_issues(issues),
         "active_pull_requests": render_active_pull_requests(pull_requests),
@@ -966,6 +1063,7 @@ def main() -> None:
         ("source_repo_state.md", normalized["source_repo_state"]),
         ("latest_workforce_state.md", normalized["latest_workforce_state"]),
         ("issue_execution_history.md", normalized["issue_execution_history"]),
+        ("issue_thread_summary.md", normalized["issue_thread_summary"]),
         ("closed_society_backlog.md", normalized["closed_society_backlog"]),
         ("active_issues.md", normalized["active_issues"]),
         ("active_pull_requests.md", normalized["active_pull_requests"]),
