@@ -16,6 +16,7 @@ RAW_DIR = CONTEXT_DIR / "raw"
 NORMALIZED_DIR = CONTEXT_DIR / "normalized"
 WORKFLOW_INPUTS_DIR = CONTEXT_DIR / "workflow-inputs"
 REQUIREMENT_DEBATE_DIR = ROOT_DIR / "scripts" / "requirement-debate"
+WORKSPACE_ISSUES_REPO = "Jongtae/camel-workforce-studio"
 
 if str(REQUIREMENT_DEBATE_DIR) not in sys.path:
     sys.path.insert(0, str(REQUIREMENT_DEBATE_DIR))
@@ -101,6 +102,29 @@ def collect_github_issues(repo: str) -> list:
         encoding="utf-8",
     )
     return issues
+
+
+def collect_workspace_open_issues() -> list:
+    issues = run_gh_json(
+        [
+            "issue",
+            "list",
+            "--repo",
+            WORKSPACE_ISSUES_REPO,
+            "--state",
+            "open",
+            "--limit",
+            "50",
+            "--json",
+            "number,title,body,labels,assignees,updatedAt,url",
+        ]
+    )
+    issues_path = RAW_DIR / "github" / "workspace_issues.json"
+    issues_path.write_text(
+        json.dumps(issues, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return issues if isinstance(issues, list) else []
 
 
 def collect_github_pull_requests(repo: str) -> dict:
@@ -458,6 +482,7 @@ def render_current_situation(
     source_intent: dict,
     latest_workforce_state: str,
     pull_requests: dict,
+    workspace_issues: list,
 ) -> str:
     latest_summary = latest_workforce_state.strip() or "- No previous workforce state found."
     recent_commit_subjects = [
@@ -467,6 +492,7 @@ def render_current_situation(
     merged_prs = pull_requests.get("merged", [])
     open_pr_titles = [pr.get("title", "") for pr in open_prs[:3] if pr.get("title")]
     merged_pr_titles = [pr.get("title", "") for pr in merged_prs[:3] if pr.get("title")]
+    workspace_issue_titles = [issue.get("title", "") for issue in workspace_issues[:3] if issue.get("title")]
     lines = [
         "# Current Situation",
         "",
@@ -474,6 +500,7 @@ def render_current_situation(
         f"- Local source repository path: {source_state.get('path', '')}",
         f"- Open PR count collected: {len(open_prs)}",
         f"- Recent merged PR count collected: {len(merged_prs)}",
+        f"- Workspace open issue count collected: {len(workspace_issues)}",
     ]
     if not source_state.get("exists"):
         lines.append("- Local source repository was not found, so git-based situation checks are unavailable.")
@@ -489,10 +516,12 @@ def render_current_situation(
                 f"- Latest commit directions: {', '.join(recent_commit_subjects) if recent_commit_subjects else 'none'}",
                 f"- Open PR directions: {', '.join(open_pr_titles) if open_pr_titles else 'none'}",
                 f"- Recent merged PR directions: {', '.join(merged_pr_titles) if merged_pr_titles else 'none'}",
+                f"- Workspace open issue directions: {', '.join(workspace_issue_titles) if workspace_issue_titles else 'none'}",
                 "",
                 "## Already Decided Or Suggested",
                 "- Latest workforce state below is the current studio-level baseline unless explicitly challenged.",
                 "- 다만 latest workforce state가 source repo intent와 어긋나면 source repo intent를 우선하라.",
+                "- Workspace open issues are continuation-memory candidates and should be read before inventing a brand-new gap.",
                 "",
                 "## Working Tree Status",
             ]
@@ -564,6 +593,32 @@ def render_active_issues(issues: list) -> str:
                 "",
             ]
         )
+    return "\n".join(lines).strip() + "\n"
+
+
+def render_workspace_open_issues(issues: list) -> str:
+    lines = ["# Workspace Open Issues", ""]
+    if not issues:
+        lines.append("- No open workspace issues were found.")
+        return "\n".join(lines) + "\n"
+
+    for issue in issues:
+        labels = ", ".join(label["name"] for label in issue.get("labels", [])) or "no labels"
+        assignees = ", ".join(assignee.get("login", "") for assignee in issue.get("assignees", [])) or "unassigned"
+        lines.extend(
+            [
+                f"## #{issue['number']} {issue['title']}",
+                f"- Updated: {issue.get('updatedAt', '')}",
+                f"- URL: {issue.get('url', '')}",
+                f"- Assignees: {assignees}",
+                f"- Labels: {labels}",
+                "",
+            ]
+        )
+        body = issue.get("body", "")
+        if body:
+            lines.append(trim(body, max_lines=8))
+            lines.append("")
     return "\n".join(lines).strip() + "\n"
 
 
@@ -1022,6 +1077,7 @@ def main() -> None:
     ensure_dirs()
 
     issues = collect_github_issues(args.repo)
+    workspace_issues = collect_workspace_open_issues()
     pull_requests = collect_github_pull_requests(args.repo)
     reports = collect_reports()
     progress_items = collect_progress_logs()
@@ -1037,9 +1093,10 @@ def main() -> None:
 
     normalized = {
         "current_situation": render_current_situation(
-            args.repo, source_state, source_intent, latest_workforce_state, pull_requests
+            args.repo, source_state, source_intent, latest_workforce_state, pull_requests, workspace_issues
         ),
         "project_snapshot": render_project_snapshot(args.repo, issues, pull_requests),
+        "workspace_open_issues": render_workspace_open_issues(workspace_issues),
         "source_repo_intent": render_source_repo_intent(source_intent),
         "source_repo_state": render_source_repo_state(source_state),
         "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
@@ -1059,6 +1116,7 @@ def main() -> None:
     for filename, content in [
         ("current_situation.md", normalized["current_situation"]),
         ("project_snapshot.md", normalized["project_snapshot"]),
+        ("workspace_open_issues.md", normalized["workspace_open_issues"]),
         ("source_repo_intent.md", normalized["source_repo_intent"]),
         ("source_repo_state.md", normalized["source_repo_state"]),
         ("latest_workforce_state.md", normalized["latest_workforce_state"]),

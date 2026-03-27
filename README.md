@@ -192,6 +192,7 @@ GitHub Actions에서 `AI-Fashion-Forum`에 issue를 실제로 생성하려면 `s
 - issue를 발급하면 해당 run과 issue URL/번호가 `context/history/run-ledger.jsonl`에 기록됩니다.
 - 다음 `build_context.py` 실행은 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`에 반영합니다.
 - `build_context.py`는 issue thread summary를 함께 만들어 `context/normalized/issue_thread_summary.md`와 `context/workflow-inputs/*.md`에 포함합니다.
+- `build_context.py`는 이 레포의 open issues도 읽어 `context/normalized/workspace_open_issues.md`와 `context/workflow-inputs/*.md`에 포함합니다.
 - GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용합니다.
 - 닫힌 유사 issue가 있으면 새 발급을 멈추고 기존 issue에 continuation comment만 남깁니다.
 - commitment와 각 workforce는 issue뿐 아니라 open PR과 최근 merged PR도 context source로 읽습니다.
