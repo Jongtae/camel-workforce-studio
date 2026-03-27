@@ -168,6 +168,9 @@ issue 발급 이력과 현재 처리 상태는 run ledger와 `context/normalized
 5. 장기 기억이 필요해 보여도, 먼저 문서 handoff를 강화하라.
    이 저장소는 CAMEL memory보다 explicit artifact를 우선한다.
 
+6. 이미 발급된 issue는 버리지 말고 continuation comment로 이어가라.
+   닫힌 유사 issue를 만나면 새 issue를 억지로 만들기보다, 기존 thread를 workflow memory처럼 재사용하는 편이 낫다.
+
 ## 8. 추천 문서 갱신 규칙
 
 앞으로도 구조를 바꾸면 아래 문서를 같이 갱신하는 것이 좋다.

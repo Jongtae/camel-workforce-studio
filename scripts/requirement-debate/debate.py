@@ -1484,9 +1484,47 @@ def run_gh_issue_create(
     return ""
 
 
+def run_gh_issue_comment(repo: str, issue_number: int, body: str) -> str:
+    cmd = [
+        "gh",
+        "issue",
+        "comment",
+        str(issue_number),
+        "--repo",
+        repo,
+        "--body",
+        body,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0:
+        return result.stdout.strip()
+    print(f"  ⚠ GitHub Issue comment 실패: {result.stderr}")
+    return ""
+
+
 def is_closed_issue_state(state: str) -> bool:
     normalized = state.strip().lower()
     return bool(normalized) and normalized != "open"
+
+
+def build_continuation_comment(
+    current_title: str,
+    current_body: str,
+    matched_issue_number: Any,
+    matched_issue_title: str,
+    matched_issue_state: str,
+) -> str:
+    return (
+        "## Workforce Continuation Note\n\n"
+        f"- Current Run Topic: {current_title}\n"
+        f"- Current Run State: continuation_check\n"
+        f"- Matched Issue: #{matched_issue_number} [{matched_issue_state}] {matched_issue_title}\n"
+        "\n"
+        "이번 실행은 동일하거나 매우 유사한 주제를 새로 발급하기보다, "
+        "기존 이슈의 맥락을 이어서 다음 판단에 재사용하기 위한 continuation note입니다.\n\n"
+        "## Current Draft Body\n\n"
+        f"{current_body.strip()}\n"
+    )
 
 
 def create_or_reuse_issue(
@@ -1505,13 +1543,31 @@ def create_or_reuse_issue(
         number = existing.get("number", "?")
         state = str(existing.get("state", "unknown")).strip()
         existing_title = str(existing.get("title", "")).strip()
+        continuation_comment = build_continuation_comment(
+            current_title=title,
+            current_body=body,
+            matched_issue_number=number,
+            matched_issue_title=existing_title,
+            matched_issue_state=state,
+        )
+        comment_url = ""
+        if str(number).isdigit():
+            comment_url = run_gh_issue_comment(
+                repo=repo,
+                issue_number=int(number),
+                body=continuation_comment,
+            )
         if is_closed_issue_state(state):
             print(f"  ⏭ 닫힌 유사 issue 발견: #{number} [{state}] {existing_title}")
+            if comment_url:
+                print(f"    → 기존 닫힌 issue에 continuation comment를 남겼습니다: {comment_url}")
             print("    → 새 발급은 중단하고 draft만 유지합니다.")
-            return "", "blocked_closed_duplicate"
+            return "", "blocked_closed_duplicate_commented"
         if url:
             print(f"  ↪ 기존 issue 재사용: #{number} [{state}] {existing_title}")
-            return url, "reused_open"
+            if comment_url:
+                print(f"    → 기존 issue에 continuation comment를 남겼습니다: {comment_url}")
+            return url, "reused_open_commented" if comment_url else "reused_open"
 
     created = run_gh_issue_create(
         repo=repo,
@@ -2017,6 +2073,13 @@ def run_workforce(
                     max_child_issues=max_child_issues,
                 )
                 issue_urls = [line.strip() for line in issue_output.splitlines() if line.strip()]
+                if issue_output:
+                    if issue_status.startswith("reused_open"):
+                        print(f"  ↪ 기존 issue 재사용 완료:\n{issue_output}")
+                    else:
+                        print(f"  ✓ Issue 생성 완료:\n{issue_output}")
+                elif issue_status == "blocked_closed_duplicate_commented":
+                    print("  ⏭ 닫힌 유사 issue에는 continuation comment를 남기고 새 issue 발급은 건너뛰었습니다.")
                 append_run_ledger_entry(
                     artifacts=artifacts,
                     workforce_key=workforce_key,
@@ -2030,11 +2093,7 @@ def run_workforce(
                     labels=issue_labels,
                     milestone=issue_milestone,
                 )
-                if issue_output:
-                    print(f"  ✓ Issue 생성 완료:\n{issue_output}")
-                elif issue_status == "blocked_closed_duplicate":
-                    print("  ⏭ 닫힌 유사 issue와 중복되어 새 issue 발급은 건너뛰고 draft만 유지했습니다.")
-                else:
+                if not issue_output and issue_status != "blocked_closed_duplicate_commented":
                     print("  ⚠ GitHub Issue 생성 결과가 비어 있습니다.")
         else:
             print("⏭️ Issue 발급 건너뜀: 아직 작업 단위로 굳지 않았습니다.")

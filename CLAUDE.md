@@ -157,7 +157,7 @@ Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준
 - `--create-issue`만 주면 먼저 `issue_plan.md` draft를 저장한다.
 - 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행한다.
 - GitHub에 같은 제목의 issue가 이미 있으면 중복 생성 대신 기존 issue를 재사용한다.
-- 닫힌 issue와 제목/핵심 키워드가 과하게 비슷하면 새 발급을 중단하고 draft만 유지한다.
+- 닫힌 issue와 제목/핵심 키워드가 과하게 비슷하면 새 발급을 중단하고 기존 issue에 continuation comment만 남긴다.
 - closed society backlog가 보이면 commitment는 society 재선택보다 core/operator로 넘기는 것을 우선한다.
 
 ## When Updating This Repo
