@@ -53,8 +53,15 @@ def summarize_status(metadata: dict) -> str:
     return "\n".join(lines)
 
 
-def should_stop(metadata: dict, stop_on_issue: bool, stop_on_duplicate: bool) -> bool:
+def should_stop(
+    metadata: dict,
+    stop_on_issue: bool,
+    stop_on_duplicate: bool,
+    stop_on_created_issue: bool,
+) -> bool:
     issue_status = ((metadata.get("issue_history") or {}).get("issue_status") or "").strip()
+    if stop_on_created_issue and issue_status == "created":
+        return True
     if stop_on_duplicate and issue_status in {
         "blocked_closed_duplicate_commented",
         "reused_open_commented",
@@ -81,6 +88,11 @@ def main() -> None:
         "--stop-on-issue",
         action="store_true",
         help="Stop after a run that creates or reuses an issue",
+    )
+    parser.add_argument(
+        "--stop-on-created-issue",
+        action="store_true",
+        help="Stop only when a run creates a brand-new issue; reused/duplicate paths continue",
     )
     parser.add_argument(
         "--stop-on-duplicate",
@@ -183,7 +195,12 @@ def main() -> None:
             metadata = load_metadata(run_dir)
             print(f"Latest run dir: {run_dir}")
             print(summarize_status(metadata))
-            if should_stop(metadata, args.stop_on_issue, args.stop_on_duplicate):
+            if should_stop(
+                metadata,
+                args.stop_on_issue,
+                args.stop_on_duplicate,
+                args.stop_on_created_issue,
+            ):
                 print("Stop condition reached. Ending loop.")
                 break
 

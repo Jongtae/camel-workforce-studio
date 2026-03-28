@@ -142,13 +142,14 @@ python3 scripts/pipeline/loop_workflow.py \
   --rounds 1 \
   --create-issue \
   --approve-issue \
-  --stop-on-issue
+  --stop-on-created-issue
 ```
 
 이 모드는 `run_studio.py`를 여러 번 반복 실행하면서 매 회차의 `metadata.json`과 issue 상태를 확인합니다.
 
 - 각 회차마다 최신 context를 다시 빌드합니다.
 - 각 회차 결과의 `issue_status`, `issue_urls`, `next_workforce`, `next_topic`을 출력합니다.
+- `--stop-on-created-issue`를 주면 새 issue가 실제로 생성됐을 때만 루프를 멈춥니다.
 - `--stop-on-issue`를 주면 issue 생성 또는 재사용 후 루프를 멈춥니다.
 - `--stop-on-duplicate`를 주면 continuation comment/duplicate 경로가 나왔을 때 루프를 멈춥니다.
 
