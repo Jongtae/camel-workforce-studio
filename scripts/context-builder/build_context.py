@@ -125,7 +125,9 @@ def collect_error_issues(repo: str) -> list:
     error_keywords = [
         "bug", "error", "failed", "failure", "blocked", "blocker",
         "crash", "exception", "timeout", "panic", "broken",
-        "regression", "issue", "problem", "failed test"
+        "regression", "issue", "problem", "failed test",
+        "missing", "unmet", "dependency", "cannot", "unable",
+        "fix:", "bug:", "issue:", "error:", "broken:"
     ]
 
     errors = []
