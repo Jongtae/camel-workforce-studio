@@ -441,6 +441,22 @@ def parse_topic_catalog_from_context(context_pack_text: str) -> list[dict[str, s
     return parse_topic_catalog_items(context_pack_text)
 
 
+def parse_active_issue_titles_from_context(context_pack_text: str) -> list[str]:
+    titles: list[str] = []
+    for section_name in ("Active Issues", "Workspace Open Issues"):
+        section = first_section(context_pack_text, section_name)
+        if not section:
+            continue
+        for raw_line in section.splitlines():
+            line = raw_line.strip()
+            if not line.startswith("## #"):
+                continue
+            match = re.match(r"^##\s+#\d+\s+(.+)$", line)
+            if match:
+                titles.append(match.group(1).strip())
+    return titles
+
+
 def score_topic_catalog_match(candidate_text: str, topic: str) -> float:
     candidate_norm = normalize_topic_text(candidate_text)
     topic_norm = normalize_topic_text(topic)
@@ -458,6 +474,7 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
     if not items:
         return topic
 
+    open_issue_titles = parse_active_issue_titles_from_context(context_pack_text)
     guidance_text = context_pack_text.lower()
     if any(
         phrase in guidance_text
@@ -484,6 +501,8 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
 
     best_item = None
     best_score = 0.0
+    best_non_overlapping_item = None
+    best_non_overlapping_score = 0.0
     for item in candidates:
         candidate_text = " ".join(
             [
@@ -494,10 +513,25 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
             ]
         ).strip()
         score = score_topic_catalog_match(candidate_text, topic)
+        if open_issue_titles:
+            overlap_score = max(
+                (
+                    score_topic_catalog_match(candidate_text, open_issue_title)
+                    for open_issue_title in open_issue_titles
+                ),
+                default=0.0,
+            )
+        else:
+            overlap_score = 0.0
         if score > best_score:
             best_score = score
             best_item = item
+        if overlap_score < 0.75 and score > best_non_overlapping_score:
+            best_non_overlapping_score = score
+            best_non_overlapping_item = item
 
+    if best_non_overlapping_item:
+        best_item = best_non_overlapping_item
     if not best_item:
         return topic
 

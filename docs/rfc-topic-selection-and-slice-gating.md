@@ -2,7 +2,7 @@
 
 ## Summary
 
-이 RFC는 `commitment`가 topic을 자유롭게 창작하는 대신, 사전에 정의된 topic catalog에서 가장 작은 issue-ready slice만 고르게 하는 운영 규칙을 제안한다. 목표는 `camel-workforce-studio`가 `AI-Fashion-Forum`에 대해 실제로 가동 가능한 구현 단위만 선택하도록 만들고, 너무 앞선 고도화 주제는 epic 또는 later slice로 미루는 것이다.
+이 RFC는 `commitment`가 topic을 자유롭게 창작하는 대신, 사전에 정의된 topic catalog에서 가장 작은 issue-ready slice만 고르게 하는 운영 규칙을 제안한다. 목표는 `camel-workforce-studio`가 `AI-Fashion-Forum`에 대해 실제로 가동 가능한 구현 단위만 선택하도록 만들고, 이미 다루고 있는 CRUD slice와 겹치지 않는 다음 후속 slice로 자연스럽게 이동하게 하는 것이다.
 
 ## Problem
 

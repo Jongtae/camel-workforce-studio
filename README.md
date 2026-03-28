@@ -15,7 +15,7 @@
 ## Operating Flow
 
 1. `scripts/context-builder/build_context.py`가 GitHub issue, GitHub PR, 외부 리포트, progress log, 선택적 sim-results를 읽어 `context/workflow-inputs/*.md`를 만듭니다.
-2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다. 기본적으로 [docs/topic-catalog.md](docs/topic-catalog.md) 안의 가장 작은 issue-ready slice 중 하나를 고릅니다.
+2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다. 기본적으로 [docs/topic-catalog.md](docs/topic-catalog.md) 안의 가장 작은 issue-ready slice 중 하나를 고릅니다. 현재 catalog는 issue `#295`로 이미 다루고 있는 CRUD 범위를 넘긴 뒤의 후속 slice를 우선합니다.
 3. 선택된 workforce가 handoff와 context pack을 함께 읽고 토론합니다.
 4. 각 실행은 `decision.md`, `handoff.md`, `next_questions.md`, `round_summary.md`, `full_report.md`를 남깁니다.
 5. issue를 발급하면 run-to-issue ledger가 `context/history/run-ledger.jsonl`에 기록됩니다.
