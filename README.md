@@ -34,6 +34,18 @@
    - 실제 issue 발급은 bounded implementation slice에만 적용합니다.
    - 너무 넓은 주제는 epic candidate 또는 continuation note로 유지합니다.
 
+### Epic-First Expansion Mode
+
+AI-Fashion-Forum 본체의 큰 그림을 먼저 만들고 싶다면, 각 workforce가 아래 순서로 답하도록 유도합니다.
+
+1. `Program Goal`
+2. `Epic Landscape`
+3. `This Epic`
+4. `Adjacent Epics / Dependencies`
+5. `Out of Scope`
+
+그 다음에야 `Issue Title`, `Summary`, `Acceptance Criteria`, `Next Actions`로 내려가면, 요구사항이 단일 슬라이스로 너무 빨리 좁아지는 것을 막을 수 있습니다.
+
 ## Repository Layout
 
 ```text
