@@ -1715,6 +1715,44 @@ def run_gh_issue_comment(repo: str, issue_number: int, body: str) -> str:
     return ""
 
 
+def run_gh_issue_reopen(repo: str, issue_number: int) -> str:
+    cmd = [
+        "gh",
+        "issue",
+        "reopen",
+        str(issue_number),
+        "--repo",
+        repo,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  ⚠ GitHub Issue reopen 실패: {result.stderr}")
+        return ""
+    view = subprocess.run(
+        [
+            "gh",
+            "issue",
+            "view",
+            str(issue_number),
+            "--repo",
+            repo,
+            "--json",
+            "url,state",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if view.returncode != 0:
+        return ""
+    try:
+        payload = json.loads(view.stdout or "{}")
+    except json.JSONDecodeError:
+        return ""
+    if isinstance(payload, dict):
+        return str(payload.get("url", "")).strip()
+    return ""
+
+
 def is_closed_issue_state(state: str) -> bool:
     normalized = state.strip().lower()
     return bool(normalized) and normalized != "open"
@@ -1774,6 +1812,18 @@ def create_or_reuse_issue(
             print(f"  ⏭ 닫힌 유사 issue 발견: #{number} [{state}] {existing_title}")
             if comment_url:
                 print(f"    → 기존 닫힌 issue에 continuation comment를 남겼습니다: {comment_url}")
+            reopened_url = ""
+            if str(number).isdigit():
+                reopened_url = run_gh_issue_reopen(repo=repo, issue_number=int(number))
+            if reopened_url:
+                print(f"    → 기존 닫힌 issue를 다시 열었습니다: {reopened_url}")
+                issue_index[normalize_issue_title(existing_title)] = {
+                    "title": existing_title,
+                    "body": str(existing.get("body", "")),
+                    "url": reopened_url,
+                    "state": "open",
+                }
+                return reopened_url, "reopened_closed_duplicate_commented"
             print("    → 새 발급은 중단하고 draft만 유지합니다.")
             return "", "blocked_closed_duplicate_commented"
         if url:
