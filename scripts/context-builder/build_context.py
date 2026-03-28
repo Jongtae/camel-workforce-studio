@@ -104,6 +104,59 @@ def collect_github_issues(repo: str) -> list:
     return issues
 
 
+def collect_error_issues(repo: str) -> list:
+    """Collect issues and PRs that mention errors, failures, or blockers."""
+    # Collect recent closed issues for error patterns
+    all_issues = run_gh_json(
+        [
+            "issue",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "all",
+            "--limit",
+            "200",
+            "--json",
+            "number,title,body,labels,state,updatedAt,url",
+        ],
+    )
+
+    error_keywords = [
+        "bug", "error", "failed", "failure", "blocked", "blocker",
+        "crash", "exception", "timeout", "panic", "broken",
+        "regression", "issue", "problem", "failed test"
+    ]
+
+    errors = []
+    for issue in all_issues if isinstance(all_issues, list) else []:
+        title_lower = (issue.get("title", "") or "").lower()
+        body_lower = (issue.get("body", "") or "").lower()
+
+        # Check for error keywords
+        found_keyword = any(kw in title_lower or kw in body_lower for kw in error_keywords)
+        if found_keyword:
+            errors.append({
+                "number": issue.get("number"),
+                "title": issue.get("title", ""),
+                "state": issue.get("state", ""),
+                "updated": issue.get("updatedAt", ""),
+                "url": issue.get("url", ""),
+                "labels": [label.get("name", "") for label in issue.get("labels", [])],
+                "preview": (issue.get("body", "") or "").split("\n")[0][:100],
+            })
+
+    # Sort: open first, then by recency
+    errors.sort(key=lambda x: (x["state"] == "closed", -ord(x.get("updated", "")[0]) if x.get("updated") else 0))
+
+    errors_path = RAW_DIR / "github" / "error_issues.json"
+    errors_path.write_text(
+        json.dumps(errors, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return errors
+
+
 def collect_workspace_open_issues() -> list:
     issues = run_gh_json(
         [
@@ -697,6 +750,51 @@ def render_sim_results(sim_results: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def render_error_analysis(errors: list) -> str:
+    lines = ["# Error & Blocker Analysis", ""]
+    if not errors:
+        lines.append("- No error or blocker issues were found.")
+        return "\n".join(lines) + "\n"
+
+    open_errors = [e for e in errors if e["state"] == "open"]
+    closed_errors = [e for e in errors if e["state"] == "closed"]
+
+    if open_errors:
+        lines.extend(["## Open Errors/Blockers", ""])
+        for error in open_errors[:10]:
+            labels_str = ", ".join(error["labels"]) if error["labels"] else "no labels"
+            lines.extend([
+                f"### #{error['number']} {error['title']}",
+                f"- Updated: {error['updated']}",
+                f"- Labels: {labels_str}",
+                f"- Preview: {error['preview']}",
+                f"- URL: {error['url']}",
+                "",
+            ])
+
+    if closed_errors:
+        lines.extend(["## Recently Closed Errors (last 30 days)", ""])
+        for error in closed_errors[:5]:
+            labels_str = ", ".join(error["labels"]) if error["labels"] else "no labels"
+            lines.extend([
+                f"### #{error['number']} {error['title']} [CLOSED]",
+                f"- Closed: {error['updated']}",
+                f"- Labels: {labels_str}",
+                f"- URL: {error['url']}",
+                "",
+            ])
+
+    lines.extend([
+        "## Workforce Implications",
+        f"- {len(open_errors)} open error/blocker issue(s) require attention.",
+        f"- {len(closed_errors)} recently closed error(s) may suggest recurring patterns.",
+        "- Use this analysis to route 'operator' or 'core' workforce to address critical blockers.",
+        "- Consider whether error patterns suggest gaps in backend/frontend/integration tests.",
+    ])
+
+    return "\n".join(lines).strip() + "\n"
+
+
 def render_open_questions(issues: list, progress_items: list, pull_requests: dict) -> str:
     lines = ["# Open Questions", ""]
     open_prs = pull_requests.get("open", [])
@@ -974,6 +1072,9 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Active Issues
 {normalized['active_issues']}
 
+## Error & Blocker Analysis
+{normalized['error_analysis']}
+
 ## Active Pull Requests
 {normalized['active_pull_requests']}
 
@@ -1039,6 +1140,7 @@ def main() -> None:
     ensure_dirs()
 
     issues = collect_github_issues(args.repo)
+    error_issues = collect_error_issues(args.repo)
     workspace_issues = collect_workspace_open_issues() if args.include_workspace_issues else []
     pull_requests = collect_github_pull_requests(args.repo)
     reports = collect_reports()
@@ -1069,6 +1171,7 @@ def main() -> None:
         "issue_execution_history": render_issue_execution_history(issue_execution_history),
         "issue_thread_summary": issue_thread_summary,
         "active_issues": render_active_issues(issues),
+        "error_analysis": render_error_analysis(error_issues),
         "active_pull_requests": render_active_pull_requests(pull_requests),
         "recent_merged_pull_requests": render_recent_merged_pull_requests(pull_requests),
         "recent_progress": render_recent_progress(progress_items),
@@ -1088,6 +1191,7 @@ def main() -> None:
         ("issue_execution_history.md", normalized["issue_execution_history"]),
         ("issue_thread_summary.md", normalized["issue_thread_summary"]),
         ("active_issues.md", normalized["active_issues"]),
+        ("error_analysis.md", normalized["error_analysis"]),
         ("active_pull_requests.md", normalized["active_pull_requests"]),
         ("recent_merged_pull_requests.md", normalized["recent_merged_pull_requests"]),
         ("recent_progress.md", normalized["recent_progress"]),
