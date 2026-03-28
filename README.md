@@ -15,7 +15,7 @@
 ## Operating Flow
 
 1. `scripts/context-builder/build_context.py`가 GitHub issue, GitHub PR, 외부 리포트, progress log, 선택적 sim-results를 읽어 `context/workflow-inputs/*.md`를 만듭니다.
-2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다.
+2. `commitment` workforce가 지금 가장 중요한 gap과 다음 workforce/topic을 결정합니다. 기본적으로 [docs/topic-catalog.md](docs/topic-catalog.md) 안의 가장 작은 issue-ready slice 중 하나를 고릅니다.
 3. 선택된 workforce가 handoff와 context pack을 함께 읽고 토론합니다.
 4. 각 실행은 `decision.md`, `handoff.md`, `next_questions.md`, `round_summary.md`, `full_report.md`를 남깁니다.
 5. issue를 발급하면 run-to-issue ledger가 `context/history/run-ledger.jsonl`에 기록됩니다.
@@ -125,6 +125,7 @@ python3 scripts/pipeline/run_studio.py \
 
 - AI-Fashion-Forum 로컬 repo의 git 상태, 최근 커밋, 변경 파일을 읽음
 - GitHub issue, open/merged PR, 로컬 report/progress, 선택적 sim-results를 합쳐 context pack 생성
+- docs/topic-catalog.md의 bounded slice 목록을 commitment topic selection에 포함
 - soft guidance가 있으면 commitment topic selection의 방향 힌트로 함께 반영
 - 최신 workforce handoff가 있으면 자동으로 commitment 입력에 포함
 - commitment 실행 후 선택된 다음 workforce까지 연쇄 실행
@@ -249,6 +250,9 @@ GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 - [docs/iteration-log.md](docs/iteration-log.md): iteration별 튜닝 기록과 점수 변화
 - [docs/workforce-handoff-contract.md](docs/workforce-handoff-contract.md): workforce 간 전달 규약
 - [docs/society-output-schema.md](docs/society-output-schema.md): society workforce 결과를 JSON/YAML 계약으로 재사용하는 규약
+- [docs/topic-catalog.md](docs/topic-catalog.md): commitment가 고를 수 있는 bounded issue-ready slice 카탈로그
+- [docs/rfc-topic-selection-and-slice-gating.md](docs/rfc-topic-selection-and-slice-gating.md): topic catalog와 issue-ready gate를 정리한 RFC 초안
+- `context/normalized/topic_catalog_selection.md`: topic catalog에서 실제 선택 가능한 항목만 뽑은 인덱스
 
 ## Semi-Autonomous Boundary
 

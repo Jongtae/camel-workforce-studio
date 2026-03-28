@@ -70,6 +70,12 @@ def main() -> None:
         help="commitment/topic selection에 반영할 soft guidance 문장",
     )
     parser.add_argument(
+        "--topic-catalog",
+        type=str,
+        default=None,
+        help="commitment가 참고할 topic catalog markdown 파일 경로",
+    )
+    parser.add_argument(
         "--rounds",
         type=int,
         default=1,
@@ -174,6 +180,8 @@ def main() -> None:
         build_context_cmd.extend(["--sim-results-dir", args.sim_results_dir])
     if args.soft_guidance:
         build_context_cmd.extend(["--soft-guidance", args.soft_guidance])
+    if args.topic_catalog:
+        build_context_cmd.extend(["--topic-catalog", args.topic_catalog])
     run_command(build_context_cmd)
 
     handoff_path = args.handoff

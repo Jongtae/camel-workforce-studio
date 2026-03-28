@@ -34,6 +34,8 @@
 - `commitment`
   - 현재 상황에서 가장 중요한 gap을 읽고 다음 workforce와 topic을 정한다.
   - 가능한 한 AI-Fashion-Forum source repo intent를 직접 근거로 삼아야 한다.
+  - 기본적으로 `docs/topic-catalog.md` 안의 가장 작은 issue-ready slice 중 하나를 고른다.
+  - `context/normalized/topic_catalog_selection.md`가 있으면 그 선택 인덱스를 우선 참고한다.
 
 - `core`
   - 사용자-facing 의미는 development 팀이다.
@@ -75,6 +77,9 @@ python scripts/context-builder/build_context.py \
   --repo Jongtae/AI-Fashion-Forum \
   --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum
 ```
+
+`build_context.py`는 기본적으로 `docs/topic-catalog.md`를 읽어 `context/workflow-inputs/*.md`에 포함한다.
+선택 인덱스는 `context/normalized/topic_catalog_selection.md`와 `context/workflow-inputs/*.md`에 함께 포함된다.
 
 ### 2. Run commitment and chain next workforce
 
@@ -157,6 +162,7 @@ Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준
 - 이 경우 issue 생성은 유지하고 project 추가만 생략하는 것이 현재 정책이다.
 - issue를 발급하는 변경은 run ledger와 metadata 반영까지 함께 유지해야 한다.
 - `--create-issue`는 issue-ready 결과에만 적용한다. 최소 기준은 `Issue Title`, 충분한 `Summary`, 2개 이상의 `Acceptance Criteria`, 그리고 착수 가능한 `Next Actions`다.
+- `Topic Catalog Selection` 바깥의 topic은 issue-ready가 아니면 발급하지 않는다. catalog에 없는 큰 주제는 RFC나 epic note로 남긴다.
 - `--create-issue`만 주면 먼저 `issue_plan.md` draft를 저장한다.
 - 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행한다.
 - GitHub에 같은 제목의 issue가 이미 있으면 중복 생성 대신 기존 issue를 재사용한다.

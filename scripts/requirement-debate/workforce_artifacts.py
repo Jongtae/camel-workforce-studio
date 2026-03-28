@@ -92,6 +92,85 @@ def parse_commitment_decision(text: str) -> tuple[str, str]:
     return workforce, topic
 
 
+def parse_topic_catalog_items(text: str) -> list[dict[str, str]]:
+    """topic catalog markdown에서 선택 가능한 항목들을 추출한다."""
+    sections = markdown_sections(text)
+    section_items: list[dict[str, str]] = []
+    for key, body in sections.items():
+        if not key.startswith("TC-"):
+            continue
+        item = {
+            "key": key,
+            "issue_topic": "",
+            "goal": "",
+            "preferred_workforce": "",
+            "why_now": "",
+            "excludes": "",
+        }
+        for raw_line in body.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            if line.startswith("- Issue Topic:"):
+                item["issue_topic"] = line[len("- Issue Topic:") :].strip()
+            elif line.startswith("- Goal:"):
+                item["goal"] = line[len("- Goal:") :].strip()
+            elif line.startswith("- Preferred Workforce:"):
+                item["preferred_workforce"] = line[len("- Preferred Workforce:") :].strip()
+            elif line.startswith("- Why now:"):
+                item["why_now"] = line[len("- Why now:") :].strip()
+            elif line.startswith("- Excludes:"):
+                item["excludes"] = line[len("- Excludes:") :].strip()
+        if item["issue_topic"] or item["goal"] or item["preferred_workforce"]:
+            section_items.append(item)
+
+    if section_items:
+        return section_items
+
+    items: list[dict[str, str]] = []
+    current: dict[str, str] | None = None
+    current_key = ""
+
+    def flush_current() -> None:
+        nonlocal current, current_key
+        if current:
+            items.append(current)
+        current = None
+        current_key = ""
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("### "):
+            flush_current()
+            current_key = line[4:].strip()
+            current = {
+                "key": current_key,
+                "issue_topic": "",
+                "goal": "",
+                "preferred_workforce": "",
+                "why_now": "",
+                "excludes": "",
+            }
+            continue
+        if current is None:
+            continue
+        if line.startswith("- Issue Topic:"):
+            current["issue_topic"] = line[len("- Issue Topic:") :].strip()
+        elif line.startswith("- Goal:"):
+            current["goal"] = line[len("- Goal:") :].strip()
+        elif line.startswith("- Preferred Workforce:"):
+            current["preferred_workforce"] = line[len("- Preferred Workforce:") :].strip()
+        elif line.startswith("- Why now:"):
+            current["why_now"] = line[len("- Why now:") :].strip()
+        elif line.startswith("- Excludes:"):
+            current["excludes"] = line[len("- Excludes:") :].strip()
+
+    flush_current()
+    return items
+
+
 def build_handoff_markdown(
     source_workforce: str,
     source_label: str,

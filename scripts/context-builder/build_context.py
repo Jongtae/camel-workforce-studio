@@ -25,6 +25,7 @@ from workforce_artifacts import (
     discover_latest_run_for_workforce,
     first_section,
     load_run_ledger,
+    parse_topic_catalog_items,
     summarize_latest_run,
     bullet_lines,
     markdown_sections,
@@ -32,13 +33,14 @@ from workforce_artifacts import (
 
 
 WORKFLOW_OBJECTIVES = {
-    "commitment": "현재 프로젝트에서 가장 중요한 gap을 식별하고 다음 workforce와 topic을 결정한다.",
+    "commitment": "현재 프로젝트에서 가장 중요한 gap을 식별하고 topic catalog에서 가장 작은 issue-ready slice 하나를 선택한다.",
     "core": "development 팀 관점에서 mock-to-service 전환을 위한 실제 구현과 아키텍처 결정을 구체화한다.",
     "operator": "운영자 관점에서 컨텐츠 자정, 모니터링, 운영 정책, 기능 개선 레버를 정리한다.",
     "society": "API 기반 forum 위에서 action하는 stateful AI agent의 상태, 기억, characteristic, 내부/외부 콘텐츠 소비 규칙을 정리한다.",
 }
 
 DEFAULT_SOFT_GUIDANCE = "처음 시도로는 초기 운영 가능한 시스템 완성을 목표로 한다. 고도화 주제보다 지금 바로 검증 가능한 최소 운영 slice를 우선한다."
+DEFAULT_TOPIC_CATALOG_PATH = ROOT_DIR / "docs" / "topic-catalog.md"
 
 
 def ensure_dirs() -> None:
@@ -481,6 +483,44 @@ def render_soft_guidance(guidance: str | None) -> str:
         lines.append(f"- {guidance.strip()}")
     else:
         lines.append("- No soft guidance was provided for this run.")
+    return "\n".join(lines).strip() + "\n"
+
+
+def render_topic_catalog(catalog_text: str | None, catalog_path: Path | None = None) -> str:
+    lines = ["# Topic Catalog", ""]
+    if not catalog_text:
+        source = catalog_path or DEFAULT_TOPIC_CATALOG_PATH
+        lines.append(f"- No topic catalog was found at {source}.")
+        lines.append("- Commitment will fall back to direct issue-ready slice discovery.")
+        return "\n".join(lines).strip() + "\n"
+    lines.append(catalog_text.strip())
+    return "\n".join(lines).strip() + "\n"
+
+
+def render_topic_catalog_selection(catalog_text: str | None, catalog_path: Path | None = None) -> str:
+    lines = ["# Topic Catalog Selection", ""]
+    if not catalog_text:
+        source = catalog_path or DEFAULT_TOPIC_CATALOG_PATH
+        lines.append(f"- No topic catalog selection index was found at {source}.")
+        lines.append("- Commitment will fall back to direct issue-ready slice discovery.")
+        return "\n".join(lines).strip() + "\n"
+
+    items = parse_topic_catalog_items(catalog_text)
+    if not items:
+        lines.append("- No selectable topic entries were parsed from the catalog.")
+        return "\n".join(lines).strip() + "\n"
+
+    for item in items:
+        lines.extend(
+            [
+                f"## {item.get('key', '').strip()}",
+                f"- Issue Topic: {item.get('issue_topic', '').strip() or item.get('key', '').strip()}",
+                f"- Preferred Workforce: {item.get('preferred_workforce', '').strip() or 'unknown'}",
+                f"- Goal: {item.get('goal', '').strip() or 'unknown'}",
+                f"- Why now: {item.get('why_now', '').strip() or 'unknown'}",
+                "",
+            ]
+        )
     return "\n".join(lines).strip() + "\n"
 
 
@@ -1064,6 +1104,12 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Soft Guidance
 {normalized['soft_guidance']}
 
+## Topic Catalog
+{normalized['topic_catalog']}
+
+## Topic Catalog Selection
+{normalized['topic_catalog_selection']}
+
 ## Current Situation
 {normalized['current_situation']}
 
@@ -1157,6 +1203,12 @@ def main() -> None:
         default=None,
         help="commitment/topic selection에 반영할 soft guidance 문장",
     )
+    parser.add_argument(
+        "--topic-catalog",
+        type=str,
+        default=None,
+        help="commitment가 참고할 topic catalog markdown 파일 경로",
+    )
     args = parser.parse_args()
 
     ensure_dirs()
@@ -1176,8 +1228,13 @@ def main() -> None:
     issue_thread_summary = render_issue_thread_summary(issue_execution_history)
     society_output_contract = build_society_output_contract(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
+    topic_catalog_path = Path(args.topic_catalog) if args.topic_catalog else DEFAULT_TOPIC_CATALOG_PATH
+    topic_catalog_text = topic_catalog_path.read_text(encoding="utf-8") if topic_catalog_path.exists() else ""
+
     normalized = {
         "soft_guidance": render_soft_guidance(args.soft_guidance),
+        "topic_catalog": render_topic_catalog(topic_catalog_text, topic_catalog_path),
+        "topic_catalog_selection": render_topic_catalog_selection(topic_catalog_text, topic_catalog_path),
         "current_situation": render_current_situation(
             args.repo,
             source_state,
@@ -1207,6 +1264,8 @@ def main() -> None:
     for filename, content in [
         ("current_situation.md", normalized["current_situation"]),
         ("soft_guidance.md", normalized["soft_guidance"]),
+        ("topic_catalog.md", normalized["topic_catalog"]),
+        ("topic_catalog_selection.md", normalized["topic_catalog_selection"]),
         ("project_snapshot.md", normalized["project_snapshot"]),
         ("workspace_open_issues.md", normalized["workspace_open_issues"]),
         ("source_repo_intent.md", normalized["source_repo_intent"]),
