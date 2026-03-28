@@ -117,6 +117,7 @@ python3 scripts/pipeline/run_studio.py \
   --repo Jongtae/AI-Fashion-Forum \
   --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
   --sim-results-dir /Users/jongtaelee/Documents/AI-Fashion-Forum/path/to/sim-results \
+  --soft-guidance "처음 시도로는 초기 운영 가능한 시스템 완성을 목표로 한다." \
   --rounds 1
 ```
 
@@ -124,6 +125,7 @@ python3 scripts/pipeline/run_studio.py \
 
 - AI-Fashion-Forum 로컬 repo의 git 상태, 최근 커밋, 변경 파일을 읽음
 - GitHub issue, open/merged PR, 로컬 report/progress, 선택적 sim-results를 합쳐 context pack 생성
+- soft guidance가 있으면 commitment topic selection의 방향 힌트로 함께 반영
 - 최신 workforce handoff가 있으면 자동으로 commitment 입력에 포함
 - commitment 실행 후 선택된 다음 workforce까지 연쇄 실행
 

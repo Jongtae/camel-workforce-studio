@@ -38,6 +38,8 @@ WORKFLOW_OBJECTIVES = {
     "society": "API 기반 forum 위에서 action하는 stateful AI agent의 상태, 기억, characteristic, 내부/외부 콘텐츠 소비 규칙을 정리한다.",
 }
 
+DEFAULT_SOFT_GUIDANCE = "처음 시도로는 초기 운영 가능한 시스템 완성을 목표로 한다. 고도화 주제보다 지금 바로 검증 가능한 최소 운영 slice를 우선한다."
+
 
 def ensure_dirs() -> None:
     for path in [
@@ -471,6 +473,15 @@ def render_project_snapshot(repo: str, issues: list, pull_requests: dict) -> str
         f"- Open GitHub PRs collected for this build: {len(open_prs)}\n"
         f"- Recent merged GitHub PRs collected for this build: {len(merged_prs)}\n"
     )
+
+
+def render_soft_guidance(guidance: str | None) -> str:
+    lines = ["# Soft Guidance", ""]
+    if guidance:
+        lines.append(f"- {guidance.strip()}")
+    else:
+        lines.append("- No soft guidance was provided for this run.")
+    return "\n".join(lines).strip() + "\n"
 
 
 def render_source_repo_intent(source_intent: dict) -> str:
@@ -1050,6 +1061,9 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Objective
 {WORKFLOW_OBJECTIVES[workforce]}
 
+## Soft Guidance
+{normalized['soft_guidance']}
+
 ## Current Situation
 {normalized['current_situation']}
 
@@ -1137,6 +1151,12 @@ def main() -> None:
         action="store_true",
         help="camel-workforce-studio 자체의 open issues를 context에 포함한다. 기본값은 false다.",
     )
+    parser.add_argument(
+        "--soft-guidance",
+        type=str,
+        default=None,
+        help="commitment/topic selection에 반영할 soft guidance 문장",
+    )
     args = parser.parse_args()
 
     ensure_dirs()
@@ -1157,6 +1177,7 @@ def main() -> None:
     society_output_contract = build_society_output_contract(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
     normalized = {
+        "soft_guidance": render_soft_guidance(args.soft_guidance),
         "current_situation": render_current_situation(
             args.repo,
             source_state,
@@ -1185,6 +1206,7 @@ def main() -> None:
 
     for filename, content in [
         ("current_situation.md", normalized["current_situation"]),
+        ("soft_guidance.md", normalized["soft_guidance"]),
         ("project_snapshot.md", normalized["project_snapshot"]),
         ("workspace_open_issues.md", normalized["workspace_open_issues"]),
         ("source_repo_intent.md", normalized["source_repo_intent"]),

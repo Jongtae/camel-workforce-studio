@@ -13,6 +13,7 @@ BUILD_CONTEXT = ROOT_DIR / "scripts" / "context-builder" / "build_context.py"
 COMMITMENT_RUNNER = ROOT_DIR / "scripts" / "requirement-debate" / "commitment_debate.py"
 OUTPUT_DIR = ROOT_DIR / "scripts" / "requirement-debate" / "outputs"
 REQUIREMENT_DEBATE_DIR = ROOT_DIR / "scripts" / "requirement-debate"
+DEFAULT_SOFT_GUIDANCE = "처음 시도로는 초기 운영 가능한 시스템 완성을 목표로 한다. 고도화 주제보다 지금 바로 검증 가능한 최소 운영 slice를 우선한다."
 
 if str(REQUIREMENT_DEBATE_DIR) not in sys.path:
     sys.path.insert(0, str(REQUIREMENT_DEBATE_DIR))
@@ -61,6 +62,12 @@ def main() -> None:
         type=str,
         default=None,
         help="Optional local directory containing AI-Fashion-Forum simulation results",
+    )
+    parser.add_argument(
+        "--soft-guidance",
+        type=str,
+        default=DEFAULT_SOFT_GUIDANCE,
+        help="commitment/topic selection에 반영할 soft guidance 문장",
     )
     parser.add_argument(
         "--rounds",
@@ -165,6 +172,8 @@ def main() -> None:
     ]
     if args.sim_results_dir:
         build_context_cmd.extend(["--sim-results-dir", args.sim_results_dir])
+    if args.soft_guidance:
+        build_context_cmd.extend(["--soft-guidance", args.soft_guidance])
     run_command(build_context_cmd)
 
     handoff_path = args.handoff

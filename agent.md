@@ -82,6 +82,7 @@ python scripts/context-builder/build_context.py \
 python scripts/pipeline/run_studio.py \
   --repo Jongtae/AI-Fashion-Forum \
   --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
+  --soft-guidance "처음 시도로는 초기 운영 가능한 시스템 완성을 목표로 한다." \
   --rounds 1
 ```
 
