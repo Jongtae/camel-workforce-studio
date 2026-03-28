@@ -369,33 +369,6 @@ def enforce_commitment_decision_constraints(text: str) -> str:
     return replace_markdown_section(text, "Topic", fallback_topic)
 
 
-def commitment_has_closed_society_backlog(context_pack_text: str) -> bool:
-    lowered = context_pack_text.lower()
-    return "## closed society backlog" in lowered or (
-        "workforce: society" in lowered and "issue status: closed" in lowered
-    )
-
-
-def commitment_fallback_workforce_for_closed_society(topic: str) -> str:
-    lowered = topic.lower()
-    operator_signals = (
-        "monitor",
-        "moderation",
-        "policy",
-        "intervention",
-        "metric",
-        "dashboard",
-        "operat",
-        "자정",
-        "모니터",
-        "정책",
-        "개입",
-    )
-    if any(keyword in lowered for keyword in operator_signals):
-        return "operator"
-    return "core"
-
-
 def ensure_section_has_bullets(text: str, section_name: str, bullets: list[str]) -> str:
     current = first_section(text, section_name)
     if not current:
@@ -476,6 +449,8 @@ SCENARIOS = {
 ## 이번 토론의 목적
 이 토론은 시뮬레이션 환경을 직접 설계하는 것이 아닙니다.
 "어떤 workforce로 어떤 토픽을 논의해야 하는가"를 결정하는 메타 토론입니다.
+commitment는 방향만 정하고, issue-ready 판정과 issue 발급은 별도 단계에서 처리합니다.
+commitment가 issue 크기나 완료 기준까지 최종 확정하려고 하지 마십시오.
 
 ## 사용 가능한 workforce
 - society: stateful AI agent 행동/정체성 backend 설계 (행동 루프, 상태, 기억, 내부/외부 콘텐츠 소비)
@@ -488,6 +463,7 @@ SCENARIOS = {
 - society를 선택했다면 topic은 "어떤 상태/기억/행동/API contract가 필요한가" 형태여야 하며, 단순 갈등/현상 묘사로 끝나면 안 된다
 - operator를 선택했다면 topic은 운영자가 관찰/개입/자정/개선할 레버를 포함해야 한다
 - core를 선택했다면 topic은 development 팀이 실제로 구현하고 마이그레이션할 범위를 포함해야 한다
+- issue-ready 여부는 별도 게이트가 판단한다. commitment는 workforce와 토픽을 정하고, 실제 발급은 bounded implementation slice에 대해서만 진행한다.
 
 ## 토론 규칙
 1. Project State Analyst: 현재 상황에서 결정되지 않은 gap을 분석하라
@@ -500,8 +476,7 @@ SCENARIOS = {
 - 최신 handoff에 이미 있는 결정을 반복하지 말고, 아직 비어 있는 다음 결정을 찾는 데 집중하라
 - Git 상태가 clean이면 "코드 변경 자체"보다 "다음에 어떤 결정을 내려야 구현/운영이 이어지는가"를 우선 판단하라
 - 최근 커밋이나 latest workforce state가 특정 방향을 가리키면, 그 방향을 그대로 따를지 수정할지 명시적으로 판단하라
-- Issue Execution History 또는 Closed Society Backlog에 닫힌 society 이슈가 보이면, 그 영역은 이미 탐색된 것으로 간주하고 society 재선택보다 core 또는 operator로 넘길지를 먼저 판단하라
-- 특히 닫힌 society backlog가 현재 topic과 강하게 겹치면 society를 다시 고르지 말고, 구현/운영 전환이 필요한지 판단하라
+- Issue Execution History는 이미 처리된 내용의 맥락으로만 사용하고, society 재선택을 금지하는 신호로 쓰지 말라
 
 ## 기대 산출물
 - Selected Workforce (society / operator / core / default)
@@ -876,14 +851,6 @@ def run_commitment_decision(
 ## External Context Pack
 {context_pack_text if context_pack_text else "- external context pack 없음"}
 
-## Closed Society Backlog Guard
-{(
-    "- 닫힌 society backlog가 포함되어 있다. society와 매우 유사한 주제는 이미 다뤄졌다고 간주하고, "
-    "새로운 결정이 필요하면 core 또는 operator로 넘겨라."
-    if commitment_has_closed_society_backlog(context_pack_text)
-    else "- 닫힌 society backlog 신호 없음"
-)}
-
 ## Additional Instructions
 - 먼저 현재 상황에서 이미 결정된 것과 아직 막힌 것을 짧게 식별하라.
 - 그 다음 하나의 workforce와 하나의 topic만 확정하라.
@@ -892,22 +859,6 @@ def run_commitment_decision(
 """
     response = decision_agent.step(prompt)
     final_result = enforce_commitment_decision_constraints(extract_agent_text(response))
-    if commitment_has_closed_society_backlog(context_pack_text):
-        selected_workforce, _ = parse_commitment_decision(final_result)
-        if selected_workforce == "society":
-            fallback_workforce = commitment_fallback_workforce_for_closed_society(topic)
-            final_result = replace_markdown_section(
-                final_result,
-                "Selected Workforce",
-                fallback_workforce,
-            )
-            final_result = ensure_section_has_bullets(
-                final_result,
-                "Why This Workforce",
-                [
-                    f"닫힌 society backlog가 존재하므로 {fallback_workforce}가 다음 결정 레이어로 더 적합하다.",
-                ],
-            )
     round_results = [
         {
             "round": "1",
@@ -1900,7 +1851,7 @@ def run_workforce(
     workforce_key: str,
     topic: Optional[str] = None,
     model_name: str = "gpt-4o-mini",
-    rounds: int = 3,
+    rounds: int = 1,
     create_issue: bool = False,
     approve_issue: bool = False,
     issue_repo: Optional[str] = None,
@@ -2245,8 +2196,8 @@ def main(argv=None):
     parser.add_argument(
         "--rounds",
         type=int,
-        default=3,
-        help="토론 라운드 수 (3-5 권장, 기본: 3)",
+        default=1,
+        help="토론 라운드 수 (기본: 1, 필요 시 증설)",
     )
     parser.add_argument(
         "--handoff",

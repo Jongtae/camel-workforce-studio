@@ -92,7 +92,6 @@ roles:
       5. 토픽 문자열은 --topic 인자로 바로 사용할 수 있는 완성된 문장으로 작성하라
       6. 토픽 외에 이 토픽에서 결정되어야 할 핵심 질문 2-3개를 함께 제시하라
       7. source repo intent가 이미 agent-loop, action-space, identity-update-rules, state-schema를 가리키면 society topic을 추상 사회 현상이 아니라 backend requirement로 작성하라
-
       좋은 토픽의 조건:
       - CTO와 Backend Engineer가 다른 답을 낼 것 같으면 core workforce에 잘 맞는 토픽이다
       - Society Modeling Lead와 Community Dynamics Researcher가 다른 우선순위를 낼 것 같으면 society workforce에 잘 맞는 토픽이다

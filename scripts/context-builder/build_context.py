@@ -223,50 +223,6 @@ def collect_issue_execution_history() -> list:
     return history
 
 
-def render_closed_society_backlog(history: list) -> str:
-    lines = ["# Closed Society Backlog", ""]
-    closed_items = []
-    for entry in history:
-        if entry.get("workforce") != "society":
-            continue
-        issue_states = entry.get("issue_states", [])
-        if any(str(state.get("state", "")).upper() != "OPEN" for state in issue_states):
-            closed_items.append(entry)
-
-    if not closed_items:
-        lines.append("- No closed society backlog entries were found.")
-        return "\n".join(lines) + "\n"
-
-    for entry in closed_items[:12]:
-        lines.extend(
-            [
-                f"## {entry.get('recorded_at', 'unknown time')}",
-                f"- Run Dir: {entry.get('run_dir', 'unknown')}",
-                f"- Topic: {entry.get('topic', 'unknown')}",
-                f"- Issue Status: {entry.get('issue_status', 'unknown')}",
-            ]
-        )
-        issue_states = entry.get("issue_states", [])
-        for state in issue_states:
-            if str(state.get("state", "")).upper() == "OPEN":
-                continue
-            lines.append(
-                f"- Closed Issue #{state.get('number')} {state.get('title')} "
-                f"(state: {state.get('state', '')}; url: {state.get('url', '')})"
-            )
-        lines.append("")
-
-    lines.extend(
-        [
-            "## Commitment Guard",
-            "- Society backlog with closed issues should be treated as already explored.",
-            "- If the current topic overlaps heavily with these closed society issues, commitment should prefer core or operator instead of society.",
-            "- Use society again only when the topic materially differs from the closed backlog.",
-        ]
-    )
-    return "\n".join(lines).strip() + "\n"
-
-
 def collect_source_repo_state(source_dir: Path) -> dict:
     if not source_dir.exists():
         return {
@@ -521,7 +477,7 @@ def render_current_situation(
                 "## Already Decided Or Suggested",
                 "- Latest workforce state below is the current studio-level baseline unless explicitly challenged.",
                 "- 다만 latest workforce state가 source repo intent와 어긋나면 source repo intent를 우선하라.",
-                "- Workspace open issues are continuation-memory candidates and should be read before inventing a brand-new gap.",
+                "- Workspace open issues are only relevant when this run is explicitly operating on the studio repo itself.",
                 "",
                 "## Working Tree Status",
             ]
@@ -596,8 +552,12 @@ def render_active_issues(issues: list) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
-def render_workspace_open_issues(issues: list) -> str:
+def render_workspace_open_issues(issues: list, included: bool) -> str:
     lines = ["# Workspace Open Issues", ""]
+    if not included:
+        lines.append("- Workspace open issues are not included in this run.")
+        lines.append("- Pass `--include-workspace-issues` when operating on `camel-workforce-studio` itself.")
+        return "\n".join(lines) + "\n"
     if not issues:
         lines.append("- No open workspace issues were found.")
         return "\n".join(lines) + "\n"
@@ -1011,9 +971,6 @@ def build_workflow_input(workforce: str, normalized: dict) -> str:
 ## Issue Thread Summary
 {normalized['issue_thread_summary']}
 
-## Closed Society Backlog
-{normalized['closed_society_backlog']}
-
 ## Active Issues
 {normalized['active_issues']}
 
@@ -1072,12 +1029,17 @@ def main() -> None:
         default=None,
         help="AI-Fashion-Forum 실험 산출물을 읽을 로컬 디렉터리 경로",
     )
+    parser.add_argument(
+        "--include-workspace-issues",
+        action="store_true",
+        help="camel-workforce-studio 자체의 open issues를 context에 포함한다. 기본값은 false다.",
+    )
     args = parser.parse_args()
 
     ensure_dirs()
 
     issues = collect_github_issues(args.repo)
-    workspace_issues = collect_workspace_open_issues()
+    workspace_issues = collect_workspace_open_issues() if args.include_workspace_issues else []
     pull_requests = collect_github_pull_requests(args.repo)
     reports = collect_reports()
     progress_items = collect_progress_logs()
@@ -1087,22 +1049,25 @@ def main() -> None:
     source_intent = collect_source_repo_intent(Path(args.source_dir))
     latest_workforce_state = summarize_latest_run(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
     issue_execution_history = collect_issue_execution_history()
-    closed_society_backlog = render_closed_society_backlog(issue_execution_history)
     issue_thread_summary = render_issue_thread_summary(issue_execution_history)
     society_output_contract = build_society_output_contract(ROOT_DIR / "scripts" / "requirement-debate" / "outputs")
 
     normalized = {
         "current_situation": render_current_situation(
-            args.repo, source_state, source_intent, latest_workforce_state, pull_requests, workspace_issues
+            args.repo,
+            source_state,
+            source_intent,
+            latest_workforce_state,
+            pull_requests,
+            workspace_issues,
         ),
         "project_snapshot": render_project_snapshot(args.repo, issues, pull_requests),
-        "workspace_open_issues": render_workspace_open_issues(workspace_issues),
+        "workspace_open_issues": render_workspace_open_issues(workspace_issues, args.include_workspace_issues),
         "source_repo_intent": render_source_repo_intent(source_intent),
         "source_repo_state": render_source_repo_state(source_state),
         "latest_workforce_state": render_latest_workforce_state(latest_workforce_state),
         "issue_execution_history": render_issue_execution_history(issue_execution_history),
         "issue_thread_summary": issue_thread_summary,
-        "closed_society_backlog": closed_society_backlog,
         "active_issues": render_active_issues(issues),
         "active_pull_requests": render_active_pull_requests(pull_requests),
         "recent_merged_pull_requests": render_recent_merged_pull_requests(pull_requests),
@@ -1122,7 +1087,6 @@ def main() -> None:
         ("latest_workforce_state.md", normalized["latest_workforce_state"]),
         ("issue_execution_history.md", normalized["issue_execution_history"]),
         ("issue_thread_summary.md", normalized["issue_thread_summary"]),
-        ("closed_society_backlog.md", normalized["closed_society_backlog"]),
         ("active_issues.md", normalized["active_issues"]),
         ("active_pull_requests.md", normalized["active_pull_requests"]),
         ("recent_merged_pull_requests.md", normalized["recent_merged_pull_requests"]),

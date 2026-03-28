@@ -115,7 +115,7 @@ sprint issue에는 담당자별 처리 순서가 같이 기록된다.
 issue를 발급한 run은 반드시 `context/history/run-ledger.jsonl`에 기록되어야 한다.
 다음 `build_context.py` 실행은 이 ledger를 읽어 현재 issue 상태를 `context/normalized/issue_execution_history.md`로 다시 정규화해야 한다.
 `context-builder`는 issue thread summary도 만들어 `context/normalized/issue_thread_summary.md`와 `context/workflow-inputs/*.md`에 포함해야 한다.
-`context-builder`는 이 레포의 open issues도 읽어 `context/normalized/workspace_open_issues.md`와 `context/workflow-inputs/*.md`에 포함해야 한다.
+`context-builder`는 기본적으로 대상 repo의 issue만 읽는다. `camel-workforce-studio` 자체의 open issues를 context에 포함해야 할 때만 `--include-workspace-issues`를 사용한다.
 같은 실행에서 open PR과 최근 merged PR도 `context/normalized/active_pull_requests.md`, `context/normalized/recent_merged_pull_requests.md`로 정규화해야 한다.
 GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용해야 한다.
 `context-builder`는 선택적으로 AI-Fashion-Forum의 sim-results를 읽어 `context/normalized/sim_results.md`와 `context/normalized/society_output_contract.json`으로 정규화해야 한다.
@@ -160,7 +160,6 @@ Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준
 - 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행한다.
 - GitHub에 같은 제목의 issue가 이미 있으면 중복 생성 대신 기존 issue를 재사용한다.
 - 닫힌 issue와 제목/핵심 키워드가 과하게 비슷하면 새 발급을 중단하고 기존 issue에 continuation comment만 남긴다.
-- closed society backlog가 보이면 commitment는 society 재선택보다 core/operator로 넘기는 것을 우선한다.
 
 ## When Updating This Repo
 
