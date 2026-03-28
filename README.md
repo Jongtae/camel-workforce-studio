@@ -132,6 +132,26 @@ python3 scripts/pipeline/run_studio.py \
 
 `--sim-results-dir`는 AI-Fashion-Forum 실험 산출물이 들어 있는 로컬 경로를 가리킵니다. 지정하지 않아도 `build_context.py`가 source repo 안의 표준 후보 경로를 자동 탐색합니다.
 
+### 3-1-1. Repeat the loop with status checks
+
+```bash
+python3 scripts/pipeline/loop_workflow.py \
+  --iterations 3 \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
+  --rounds 1 \
+  --create-issue \
+  --approve-issue \
+  --stop-on-issue
+```
+
+이 모드는 `run_studio.py`를 여러 번 반복 실행하면서 매 회차의 `metadata.json`과 issue 상태를 확인합니다.
+
+- 각 회차마다 최신 context를 다시 빌드합니다.
+- 각 회차 결과의 `issue_status`, `issue_urls`, `next_workforce`, `next_topic`을 출력합니다.
+- `--stop-on-issue`를 주면 issue 생성 또는 재사용 후 루프를 멈춥니다.
+- `--stop-on-duplicate`를 주면 continuation comment/duplicate 경로가 나왔을 때 루프를 멈춥니다.
+
 ### 3-2. Run and issue AI-Fashion-Forum issues
 
 ```bash
