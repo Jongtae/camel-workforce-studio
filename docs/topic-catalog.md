@@ -7,12 +7,12 @@
 
 이 섹션은 운영 도구가 만들다 만 것처럼 보이지 않도록, operator hub의 첫인상과 연결 구조를 먼저 닫기 위한 slice들이다. 여기서는 시뮬레이션보다 운영 도구의 완성도가 우선이다.
 
-### TC-1. Operator hub landing and navigation coherence minimum
-- Issue Topic: Operator hub landing and navigation coherence minimum
-- Goal: 운영 도구 허브의 첫 화면, 카드 배치, 섹션 전환, 현재 위치 표시를 정리한다.
+### TC-1. Replay viewer continuity minimum
+- Issue Topic: Replay viewer continuity minimum
+- Goal: 최신 run replay의 연속성, 재생 흐름, 이전/다음 run 연결을 매끄럽게 만든다.
 - Preferred Workforce: operator
-- Why now: 운영 도구가 아직 조각나 보이면 사용자가 시스템을 신뢰하기 어렵기 때문이다.
-- Excludes: 고급 분석, 정책 실험 플랫폼, 시뮬레이션 고도화
+- Why now: replay 흐름이 끊기면 운영자는 어느 구간이 바뀌었는지 빠르게 파악할 수 없기 때문이다.
+- Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
 ### TC-2. Sprint summary and replay viewer continuity minimum
 - Issue Topic: Sprint summary and replay viewer continuity minimum
@@ -21,7 +21,14 @@
 - Why now: 운영 도구의 핵심 정보가 분절되면 아직 완성되지 않은 인상을 주기 때문이다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
-### TC-3. Metric card and empty state completeness minimum
+### TC-3. Operator hub landing and navigation coherence minimum
+- Issue Topic: Operator hub landing and navigation coherence minimum
+- Goal: 운영 도구 허브의 첫 화면, 카드 배치, 섹션 전환, 현재 위치 표시를 정리한다.
+- Preferred Workforce: operator
+- Why now: 운영 도구의 핵심 정보가 이미 있더라도, 첫 화면이 조각나 보이면 전체 허브 신뢰가 깨지기 때문이다.
+- Excludes: 고급 분석, 정책 실험 플랫폼, 시뮬레이션 고도화
+
+### TC-4. Metric card and empty state completeness minimum
 - Issue Topic: Metric card and empty state completeness minimum
 - Goal: metric 카드와 빈 상태를 일관된 메시지와 레이아웃으로 채운다.
 - Preferred Workforce: core

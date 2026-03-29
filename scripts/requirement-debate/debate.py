@@ -491,8 +491,8 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
     )
     if operator_hub_guidance:
         operator_hub_priority = [
-            "Operator hub landing and navigation coherence minimum",
             "Sprint summary and replay viewer continuity minimum",
+            "Operator hub landing and navigation coherence minimum",
             "Metric card and empty state completeness minimum",
             "Minimal operator visibility API",
         ]
