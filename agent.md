@@ -22,6 +22,7 @@
 
 이 저장소는 범용 CAMEL 데모가 아니다.
 목표는 [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision studio를 운영하는 것이다.
+AI-Fashion-Forum은 읽기 전용 source repo로 취급한다. 직접 코드나 UI를 수정하지 말고, 필요한 변화는 issue와 handoff로만 넘겨라.
 
 핵심 흐름:
 

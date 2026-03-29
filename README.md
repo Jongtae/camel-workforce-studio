@@ -2,6 +2,8 @@
 
 `camel-workforce-studio`는 범용 CAMEL 데모 레포가 아니라, [AI-Fashion-Forum](https://github.com/Jongtae/AI-Fashion-Forum)을 위한 companion decision workspace입니다. 이 저장소는 제품 본체를 구현하는 대신, GitHub issue, GitHub PR, 외부 리포트, progress log, 이전 논의 결과를 정규화해서 여러 workforce 토론으로 넘기고, 그 결과를 다시 다음 논의나 GitHub handoff로 연결하는 역할을 맡습니다.
 
+AI-Fashion-Forum은 이 워크스페이스에서 **읽기 전용 source repo**로 다룹니다. 직접 코드 수정은 하지 않고, 구현이 필요하면 issue와 handoff로만 넘깁니다. 관련 원칙은 [docs/source-repo-read-only-policy.md](docs/source-repo-read-only-policy.md)에 정리했습니다.
+
 핵심 흐름은 `Context Builder -> Commitment/Development/Operator/Society Workforce -> Handoff`입니다. 즉 topic 하나만 던지는 토론기보다, “지금 무엇이 막혀 있고 다음에 어느 workforce가 무엇을 결정해야 하는가”를 구조적으로 다루는 companion repo에 가깝습니다.
 
 ## Workforce Model

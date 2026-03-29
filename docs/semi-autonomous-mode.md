@@ -1,6 +1,7 @@
 # Semi-Autonomous Mode
 
 이 저장소는 완전 자율형 agent runtime이 아니라, `AI-Fashion-Forum`을 위한 `semi-autonomous decision studio`로 운영한다.
+AI-Fashion-Forum source repo는 읽기 전용이다. 이 워크스페이스는 issue와 handoff만 만들고, source repo 파일을 직접 고치지 않는다.
 
 ## What Gets Automated
 
