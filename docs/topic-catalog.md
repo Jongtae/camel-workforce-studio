@@ -68,6 +68,13 @@
 - Why now: 화면 전체가 반쯤 만들어진 것처럼 보이면 세부 interaction보다 먼저 layout과 information hierarchy가 사용성을 좌우하기 때문이다.
 - Excludes: backend contract, 추천 고도화, advanced visualization
 
+### TC-0.5. Shared content consumption and identity feedback loop minimum
+- Issue Topic: Shared content consumption and identity feedback loop minimum
+- Goal: 사용자가 글을 보고, 선택하고, 좋아요/싫어요/댓글 반응을 남기고, 그 반응이 agent 또는 사용자 캐릭터의 변화 흐름으로 자연스럽게 이어지는 UI/UX 구조를 닫는다.
+- Preferred Workforce: ux
+- Why now: 포럼 서비스가 단순히 글을 쓰는 곳이 아니라, 다른 사람과 agent가 함께 콘텐츠를 소비하고 반응하면서 경험이 쌓이는 공간이어야 하기 때문이다.
+- Excludes: 감정 해석 엔진, 불쾌감 감지, 고급 행동 추론, backend identity synthesis
+
 ### TC-1. Threaded reply and comment context minimum
 - Issue Topic: Threaded reply and comment context minimum
 - Goal: 댓글이 게시글뿐 아니라 다른 댓글에도 자연스럽게 응답할 수 있도록 thread context를 닫는다.
