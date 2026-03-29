@@ -10,49 +10,49 @@
 ### TC-1. Replay viewer last viewed anchor persistence minimum
 - Issue Topic: Replay viewer last viewed anchor persistence minimum
 - Goal: replay viewer가 마지막으로 본 run, 패널, 스크롤 anchor를 기억하고 다시 열릴 때 같은 지점으로 복원한다.
-- Preferred Workforce: operator
+- Preferred Workforce: ux
 - Why now: 운영자는 replay를 이어서 봐야 할 때가 많아서, 가장 작은 복원 단위부터 닫아야 맥락이 끊기지 않는다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화, 전체 재생 경험 재설계
 
 ### TC-2. Replay viewer state restore minimum
 - Issue Topic: Replay viewer state restore minimum
 - Goal: replay viewer가 마지막으로 본 run과 위치를 기억하고 다시 열릴 때 같은 상태를 복원한다.
-- Preferred Workforce: operator
+- Preferred Workforce: ux
 - Why now: 운영자는 replay를 이어서 봐야 할 때가 많아서, 상태 복원이 안 되면 맥락이 끊긴다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
 ### TC-3. Sprint summary linkage minimum
 - Issue Topic: Sprint summary linkage minimum
 - Goal: Sprint 1 요약이 replay viewer와 서로 왕복 이동 가능한 링크 구조를 갖게 한다.
-- Preferred Workforce: operator
+- Preferred Workforce: ux
 - Why now: 요약과 replay가 분리되면 운영자는 실제 근거를 빠르게 확인할 수 없다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
 ### TC-4. Replay viewer continuity minimum
 - Issue Topic: Replay viewer continuity minimum
 - Goal: 최신 run replay의 연속성, 재생 흐름, 이전/다음 run 연결을 매끄럽게 만든다.
-- Preferred Workforce: operator
+- Preferred Workforce: ux
 - Why now: replay 흐름이 끊기면 운영자는 어느 구간이 바뀌었는지 빠르게 파악할 수 없기 때문이다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
 ### TC-5. Sprint summary and replay viewer continuity minimum
 - Issue Topic: Sprint summary and replay viewer continuity minimum
 - Goal: Sprint 1 요약, replay viewer, 평가 지표가 한 흐름으로 이어지게 한다.
-- Preferred Workforce: operator
+- Preferred Workforce: ux
 - Why now: 운영 도구의 핵심 정보가 분절되면 아직 완성되지 않은 인상을 주기 때문이다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
 ### TC-6. Operator hub landing and navigation coherence minimum
 - Issue Topic: Operator hub landing and navigation coherence minimum
 - Goal: 운영 도구 허브의 첫 화면, 카드 배치, 섹션 전환, 현재 위치 표시를 정리한다.
-- Preferred Workforce: operator
+- Preferred Workforce: ux
 - Why now: 운영 도구의 핵심 정보가 이미 있더라도, 첫 화면이 조각나 보이면 전체 허브 신뢰가 깨지기 때문이다.
 - Excludes: 고급 분석, 정책 실험 플랫폼, 시뮬레이션 고도화
 
 ### TC-7. Metric card and empty state completeness minimum
 - Issue Topic: Metric card and empty state completeness minimum
 - Goal: metric 카드와 빈 상태를 일관된 메시지와 레이아웃으로 채운다.
-- Preferred Workforce: core
+- Preferred Workforce: ux
 - Why now: 비어 보이는 카드와 어색한 빈 상태가 만들다 만 느낌을 가장 강하게 주기 때문이다.
 - Excludes: 전체 대시보드 재설계, 추천 고도화, advanced visualization
 
@@ -64,25 +64,39 @@
 ### TC-1. Threaded reply and comment context minimum
 - Issue Topic: Threaded reply and comment context minimum
 - Goal: 댓글이 게시글뿐 아니라 다른 댓글에도 자연스럽게 응답할 수 있도록 thread context를 닫는다.
-- Preferred Workforce: core
+- Preferred Workforce: ux
 - Why now: threads 스타일의 대화 연속성이 포럼 UX의 가장 기본적인 품질이기 때문이다.
 - Excludes: 감정 해석, 불쾌감 감지, 고도화된 토론 분석
 
 ### TC-2. Compact compose entrypoint minimum
 - Issue Topic: Compact compose entrypoint minimum
 - Goal: 상단 composer 대신 더 가볍고 맥락적인 글쓰기 진입점을 만든다.
-- Preferred Workforce: core
+- Preferred Workforce: ux
 - Why now: Twitter-like compose 흐름처럼 사용자의 글쓰기 마찰을 낮추는 첫 화면 개선이 필요하기 때문이다.
 - Excludes: 전체 작성 플로우 개편, 고급 편집기, 추천 고도화
 
 ### TC-3. Tag navigation and hashtag search minimum
 - Issue Topic: Tag navigation and hashtag search minimum
 - Goal: 해시태그와 태그 링크가 검색/필터 결과로 자연스럽게 연결되도록 한다.
-- Preferred Workforce: core
+- Preferred Workforce: ux
 - Why now: 포럼 발견성과 탐색성은 thread와 tag navigation에서 가장 빨리 체감되기 때문이다.
 - Excludes: 복잡한 추천 시스템, 개인화 랭킹, 고급 분석
 
-### TC-4. Reply-driven agent comment generation minimum
+### TC-4. Feed clarity and empty state coherence minimum
+- Issue Topic: Feed clarity and empty state coherence minimum
+- Goal: 포럼 피드, 빈 상태, 첫 진입 메시지가 사용자를 막지 않도록 정리한다.
+- Preferred Workforce: ux
+- Why now: 사용자는 비어 있거나 어색한 첫 화면에서 가장 빨리 이탈하기 때문이다.
+- Excludes: 추천 고도화, 개인화 랭킹, 고급 분석
+
+### TC-5. Navigation coherence and visual hierarchy minimum
+- Issue Topic: Navigation coherence and visual hierarchy minimum
+- Goal: 상단 내비게이션, 섹션 전환, 현재 위치 표시, 시각적 우선순위를 정리한다.
+- Preferred Workforce: ux
+- Why now: 화면이 반쯤 만들어진 것처럼 보이는 가장 빠른 원인이 내비게이션/계층 혼선이기 때문이다.
+- Excludes: 전체 정보구조 재설계, 디자인 시스템 전면 개편
+
+### TC-6. Reply-driven agent comment generation minimum
 - Issue Topic: Reply-driven agent comment generation minimum
 - Goal: agent comment가 parent post 또는 sibling comment 문맥에 반응하도록 한다.
 - Preferred Workforce: society

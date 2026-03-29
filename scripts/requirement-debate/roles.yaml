@@ -1,6 +1,6 @@
 # AI Fashion Forum — Legacy topic templates / reference roles
 # 이 파일은 현재 런타임에서 직접 사용되지 않는 템플릿 및 레거시 참고용입니다.
-# 실제 실행은 commitment_roles.yaml, society_roles.yaml, core_roles.yaml, operator_roles.yaml을 사용합니다.
+# 실제 실행은 commitment_roles.yaml, society_roles.yaml, core_roles.yaml, operator_roles.yaml, ux_roles.yaml을 사용합니다.
 # 레거시 참고라도 service-first 원칙을 유지한다: 서비스 완성도를 먼저 닫고, 시뮬레이션은 뒤로 미룬다.
 
 roles:

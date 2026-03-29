@@ -36,10 +36,11 @@ WORKFLOW_OBJECTIVES = {
     "commitment": "현재 프로젝트에서 가장 중요한 gap을 식별하고 topic catalog에서 가장 작은 issue-ready slice 하나를 선택한다.",
     "core": "development 팀 관점에서 mock-to-service 전환을 위한 실제 구현과 아키텍처 결정을 구체화한다.",
     "operator": "운영자 관점에서 컨텐츠 자정, 모니터링, 운영 정책, 기능 개선 레버를 정리한다.",
+    "ux": "forum / admin surface UI-UX 완성도를 먼저 닫아 사용자가 실제로 쓰고 싶어지는 가장 작은 slice를 정리한다.",
     "society": "API 기반 forum 위에서 action하는 stateful AI agent의 상태, 기억, characteristic, 내부/외부 콘텐츠 소비 규칙을 정리한다.",
 }
 
-DEFAULT_SOFT_GUIDANCE = "처음 시도로는 서비스 완성도를 먼저 닫는 것을 최우선으로 한다. threads와 Twitter 같은 잘 설계된 포럼 UX를 참고하되, 특히 운영 도구가 만들다 만 것처럼 보이지 않도록 operator hub의 첫 화면, 카드 배치, replay viewer, sprint summary, 빈 상태를 먼저 정리한다. 그 다음에 thread continuity, reply context, compact compose entrypoint, tag navigation, feed clarity 같은 바로 체감되는 최소 UX와 기본 서비스 루프를 우선하고, 시뮬레이션 고도화, 불쾌감 감지, 행동 해석, 고급 분석은 서비스가 먼저 닫힌 뒤에만 논의한다."
+DEFAULT_SOFT_GUIDANCE = "처음 시도로는 서비스 완성도를 먼저 닫는 것을 최우선으로 한다. threads와 Twitter 같은 잘 설계된 포럼 UX를 참고하되, 화면이 반쯤 만들어진 것처럼 보이면 ux workforce를 먼저 고려하고 thread continuity, reply context, compact compose entrypoint, tag navigation, feed clarity, empty state, navigation coherence, copy tone, visual hierarchy 같은 바로 체감되는 surface UX를 먼저 정리한다. 운영 도구가 만들다 만 것처럼 보이면 operator hub의 첫 화면, 카드 배치, replay viewer, sprint summary, 빈 상태를 먼저 정리한다. 시뮬레이션 고도화, 불쾌감 감지, 행동 해석, 고급 분석은 서비스가 먼저 닫힌 뒤에만 논의한다."
 DEFAULT_TOPIC_CATALOG_PATH = ROOT_DIR / "docs" / "topic-catalog.md"
 
 

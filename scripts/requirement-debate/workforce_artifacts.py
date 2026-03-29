@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 
-WORKFORCE_KEYS = {"commitment", "core", "operator", "society", "default"}
+WORKFORCE_KEYS = {"commitment", "core", "operator", "society", "ux", "default"}
 SECTION_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.M)
 ROOT_DIR = Path(__file__).resolve().parents[2]
 CONTEXT_DIR = ROOT_DIR / "context"

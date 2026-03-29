@@ -14,7 +14,7 @@ COMMITMENT_RUNNER = ROOT_DIR / "scripts" / "requirement-debate" / "commitment_de
 OUTPUT_DIR = ROOT_DIR / "scripts" / "requirement-debate" / "outputs"
 REQUIREMENT_DEBATE_DIR = ROOT_DIR / "scripts" / "requirement-debate"
 SOURCE_POLICY = ROOT_DIR / "scripts" / "pipeline" / "source_policy.py"
-DEFAULT_SOFT_GUIDANCE = "처음 시도로는 서비스 완성도를 먼저 닫는 것을 최우선으로 한다. threads와 Twitter 같은 잘 설계된 포럼 UX를 참고하되, 특히 운영 도구가 만들다 만 것처럼 보이지 않도록 operator hub의 첫 화면, 카드 배치, replay viewer, sprint summary, 빈 상태를 먼저 정리한다. 그 다음에 thread continuity, reply context, compact compose entrypoint, tag navigation, feed clarity 같은 바로 체감되는 최소 UX와 기본 서비스 루프를 우선하고, 시뮬레이션 고도화, 불쾌감 감지, 행동 해석, 고급 분석은 서비스가 먼저 닫힌 뒤에만 논의한다."
+DEFAULT_SOFT_GUIDANCE = "처음 시도로는 서비스 완성도를 먼저 닫는 것을 최우선으로 한다. threads와 Twitter 같은 잘 설계된 포럼 UX를 참고하되, 화면이 반쯤 만들어진 것처럼 보이면 ux workforce를 먼저 고려하고 thread continuity, reply context, compact compose entrypoint, tag navigation, feed clarity, empty state, navigation coherence, copy tone, visual hierarchy 같은 바로 체감되는 surface UX를 먼저 정리한다. 운영 도구가 만들다 만 것처럼 보이면 operator hub의 첫 화면, 카드 배치, replay viewer, sprint summary, 빈 상태를 먼저 정리한다. 시뮬레이션 고도화, 불쾌감 감지, 행동 해석, 고급 분석은 서비스가 먼저 닫힌 뒤에만 논의한다."
 
 if str(REQUIREMENT_DEBATE_DIR) not in sys.path:
     sys.path.insert(0, str(REQUIREMENT_DEBATE_DIR))

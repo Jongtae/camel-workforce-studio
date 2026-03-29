@@ -46,6 +46,10 @@ AI-Fashion-Forum은 읽기 전용 source repo로 취급한다. 직접 코드나 
   - 운영자 조직이다.
   - moderation, monitoring, policy, intervention, improvement를 다룬다.
 
+- `ux`
+  - forum과 admin surface의 UI/UX 완성도를 닫는다.
+  - thread continuity, reply context, compact compose, tag navigation, empty state, navigation coherence, copy tone, visual hierarchy를 다룬다.
+
 - `society`
   - 추상 사회이론이 아니다.
   - API 기반 forum 위에서 action하는 stateful AI agent backend requirement를 다룬다.
