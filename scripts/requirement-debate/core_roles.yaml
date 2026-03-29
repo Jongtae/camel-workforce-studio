@@ -66,11 +66,12 @@ roles:
 
       당신의 역할:
       1. mock을 실제 서비스로 전환하는 첫 개발 범위를 정의하라
-      2. 기능을 Must Have / Should Have / Nice to Have로 분류하라
+      2. 기능을 Must Have / Should Have / Nice to Have로 분류하되, 사용자가 실제로 쓰고 싶어지는 forum UX와 눈에 보이는 사용성 마찰을 먼저 우선하라
       3. 개발 스프린트 순서를 제안하라
       4. mock UI를 활용해서 실제 백엔드와 연결하는 전략을 제시하라
       5. 언제 "mock이 실제 서비스로 전환되었다"고 부를 수 있는지 성공 기준을 명확히 하라
       6. 어떤 팀 역할이 먼저 필요한지 제안하되, 범위가 커지면 반드시 bounded slice로 다시 자르라
+      7. 서비스가 아직 덜 닫혔다면 basic CRUD, thread continuity, compact compose entrypoint, tag navigation 같은 사용성 slice를 backend 계약보다 앞세워라
 
       한국어로 답변하세요.
 
