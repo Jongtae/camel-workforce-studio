@@ -484,18 +484,43 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
             "admin surface",
             "replay viewer",
             "sprint summary",
+            "state restore",
+            "state 복원",
+            "링크",
+            "linkage",
+            "continuity",
             "빈 상태",
             "empty state",
             "카드 배치",
         ]
     )
     if operator_hub_guidance:
-        operator_hub_priority = [
-            "Sprint summary and replay viewer continuity minimum",
-            "Operator hub landing and navigation coherence minimum",
-            "Metric card and empty state completeness minimum",
-            "Minimal operator visibility API",
-        ]
+        if any(phrase in guidance_text for phrase in ["state restore", "state 복원"]):
+            operator_hub_priority = [
+                "Replay viewer state restore minimum",
+                "Sprint summary linkage minimum",
+                "Replay viewer continuity minimum",
+                "Sprint summary and replay viewer continuity minimum",
+                "Operator hub landing and navigation coherence minimum",
+                "Metric card and empty state completeness minimum",
+            ]
+        elif any(phrase in guidance_text for phrase in ["linkage", "링크"]):
+            operator_hub_priority = [
+                "Sprint summary linkage minimum",
+                "Replay viewer state restore minimum",
+                "Replay viewer continuity minimum",
+                "Sprint summary and replay viewer continuity minimum",
+                "Operator hub landing and navigation coherence minimum",
+                "Metric card and empty state completeness minimum",
+            ]
+        else:
+            operator_hub_priority = [
+                "Replay viewer continuity minimum",
+                "Sprint summary and replay viewer continuity minimum",
+                "Operator hub landing and navigation coherence minimum",
+                "Metric card and empty state completeness minimum",
+                "Minimal operator visibility API",
+            ]
         for preferred_topic in operator_hub_priority:
             for item in items:
                 issue_topic = item.get("issue_topic", "").strip()
