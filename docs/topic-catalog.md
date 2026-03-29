@@ -61,6 +61,13 @@
 
 이 섹션은 threads, Twitter-like reply UX, compact composer, tag navigation처럼 사용자가 실제로 쓰고 싶어지는 포럼 서비스 경험을 먼저 닫기 위한 slice들이다. 여기서 중요한 것은 시뮬레이션이 아니라 서비스 완성도다.
 
+### TC-0. Overall UI/UX layout and information hierarchy minimum
+- Issue Topic: Overall UI/UX layout and information hierarchy minimum
+- Goal: forum/admin surface의 전체 레이아웃, 정보 구조, 첫 시선 흐름을 먼저 닫는다.
+- Preferred Workforce: ux
+- Why now: 화면 전체가 반쯤 만들어진 것처럼 보이면 세부 interaction보다 먼저 layout과 information hierarchy가 사용성을 좌우하기 때문이다.
+- Excludes: backend contract, 추천 고도화, advanced visualization
+
 ### TC-1. Threaded reply and comment context minimum
 - Issue Topic: Threaded reply and comment context minimum
 - Goal: 댓글이 게시글뿐 아니라 다른 댓글에도 자연스럽게 응답할 수 있도록 thread context를 닫는다.
