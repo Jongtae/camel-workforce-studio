@@ -45,6 +45,13 @@ def main() -> None:
         help="AI-Fashion-Forum 로컬 경로 (기본값: 자동 감지)",
     )
     parser.add_argument(
+        "--source-policy",
+        type=str,
+        default="read-only",
+        choices=["read-only"],
+        help="Source repo policy (default: read-only)",
+    )
+    parser.add_argument(
         "--rounds",
         type=int,
         default=1,
@@ -156,6 +163,8 @@ def main() -> None:
         args.repo,
         "--source-dir",
         source_dir,
+        "--source-policy",
+        args.source_policy,
         "--rounds",
         str(args.rounds),
         "--model",

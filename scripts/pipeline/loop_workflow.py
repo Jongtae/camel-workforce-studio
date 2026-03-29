@@ -129,6 +129,13 @@ def main() -> None:
         default=str(ROOT_DIR.parent / "AI-Fashion-Forum"),
         help="Local source repository path",
     )
+    parser.add_argument(
+        "--source-policy",
+        type=str,
+        default="read-only",
+        choices=["read-only"],
+        help="Source repo policy (default: read-only)",
+    )
     parser.add_argument("--sim-results-dir", type=str, default=None)
     parser.add_argument("--soft-guidance", type=str, default=None)
     parser.add_argument("--topic-catalog", type=str, default=None)
@@ -176,6 +183,8 @@ def main() -> None:
             args.repo,
             "--source-dir",
             args.source_dir,
+            "--source-policy",
+            args.source_policy,
             "--rounds",
             str(args.rounds),
             "--model",

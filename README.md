@@ -4,6 +4,8 @@
 
 AI-Fashion-Forum은 이 워크스페이스에서 **읽기 전용 source repo**로 다룹니다. 직접 코드 수정은 하지 않고, 구현이 필요하면 issue와 handoff로만 넘깁니다. 관련 원칙은 [docs/source-repo-read-only-policy.md](docs/source-repo-read-only-policy.md)에 정리했습니다.
 
+실행기들은 `--source-policy read-only`를 기본으로 사용합니다. source repo를 읽는 동안에도 쓰기 동작은 허용하지 않습니다.
+
 핵심 흐름은 `Context Builder -> Commitment/Development/Operator/Society Workforce -> Handoff`입니다. 즉 topic 하나만 던지는 토론기보다, “지금 무엇이 막혀 있고 다음에 어느 workforce가 무엇을 결정해야 하는가”를 구조적으로 다루는 companion repo에 가깝습니다.
 
 ## Workforce Model
