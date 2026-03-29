@@ -167,6 +167,7 @@ Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준
 - 실제 GitHub 발급은 `--approve-issue`를 함께 줬을 때만 수행한다.
 - GitHub에 같은 제목의 issue가 이미 있으면 중복 생성 대신 기존 issue를 재사용한다.
 - 닫힌 issue와 제목/핵심 키워드가 과하게 비슷하면 새 발급을 중단하고 기존 issue에 continuation comment만 남긴다.
+- **Closed issue 재활용 시 다시 열기**: 기존 closed issue에 continuation comment를 추가할 때는 issue를 다시 open 상태로 변경해야 한다. 이유: assignee가 현재 actionable한 상태임을 즉시 알 수 있어야 함.
 
 ## When Updating This Repo
 
