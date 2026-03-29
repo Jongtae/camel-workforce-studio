@@ -117,6 +117,13 @@
 - Why now: thread 맥락에 반응하는 댓글은 forum service의 conversational quality를 가장 직접적으로 드러내기 때문이다.
 - Excludes: 불쾌감 감지, 감정 해석, 고도화된 사회 행동 해석
 
+### TC-7. Consumption-driven identity progression minimum
+- Issue Topic: Consumption-driven identity progression minimum
+- Goal: agent가 읽은 글, 선택한 글, 좋아요/싫어요, 댓글 반응, 외부 콘텐츠 소비를 통해 characteristic, belief, memory가 어떻게 바뀌는지 닫는다.
+- Preferred Workforce: society
+- Why now: agent가 실제로 "자라 보이게" 하려면 단순 action execution을 넘어 consumption -> reaction -> writeback 루프가 필요하기 때문이다.
+- Excludes: 감정 추론, 고도화된 추천, 정책 실험, enterprise identity platform
+
 ## Post-CRUD Follow-up Slice
 
 이 카탈로그는 이미 issue `#295`로 다루고 있는 basic CRUD 범위를 넘어서, 그 다음에 바로 이어질 수 있는 가장 작은 후속 slice를 고르기 위한 운영 기준이다.
