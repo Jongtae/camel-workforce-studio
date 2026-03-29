@@ -126,6 +126,30 @@ issue를 발급한 run은 반드시 `context/history/run-ledger.jsonl`에 기록
 GitHub에 이미 같은 제목의 issue가 있거나, 제목과 본문 핵심 키워드가 매우 비슷한 issue가 있으면 새로 만들지 않고 기존 issue를 재사용해야 한다.
 `context-builder`는 선택적으로 AI-Fashion-Forum의 sim-results를 읽어 `context/normalized/sim_results.md`와 `context/normalized/society_output_contract.json`으로 정규화해야 한다.
 
+### 4. Loop workflow with stop conditions (Optional)
+
+`run_studio.py`를 반복 실행하면서 각 반복 후 결과를 검사하고 멈춤 조건을 확인:
+
+```bash
+python scripts/pipeline/loop_workflow.py \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
+  --iterations 5 \
+  --stop-on-issue \
+  --create-issue \
+  --approve-issue
+```
+
+주요 옵션:
+
+- `--iterations N`: 최대 N회 반복 (기본값: 1)
+- `--sleep-seconds N`: 각 반복 사이에 N초 대기
+- `--stop-on-issue`: issue 생성/재사용 시 멈춤
+- `--stop-on-created-issue`: 새로운 issue만 생성되었을 때 멈춤 (중복/재사용 계속)
+- `--stop-on-duplicate`: 중복/continuation 경로 멈춤
+
+각 반복 후 `issue_status`, `issue_urls`, `next_workforce`, `next_topic` 등이 출력되어 진행 상황을 추적할 수 있다.
+
 ## Society Quality Bar
 
 Claude가 `society` 관련 프롬프트/출력을 수정할 때는 아래 기준을 유지해야 한다.
