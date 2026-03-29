@@ -155,6 +155,8 @@ def main() -> None:
     parser.add_argument("--share-memory", action="store_true")
     parser.add_argument("--handoff", type=str, default=None)
     parser.add_argument("--no-run-next", action="store_true")
+    parser.add_argument("--run-fanout", action="store_true")
+    parser.add_argument("--fanout-workforce", action="append", default=[])
     args = parser.parse_args()
 
     # Apply profile if specified
@@ -222,7 +224,11 @@ def main() -> None:
             cmd.append("--share-memory")
         if args.handoff:
             cmd.extend(["--handoff", args.handoff])
-        if args.no_run_next:
+        if args.run_fanout:
+            cmd.append("--run-fanout")
+            for fanout_workforce in args.fanout_workforce:
+                cmd.extend(["--fanout-workforce", fanout_workforce])
+        elif args.no_run_next:
             cmd.append("--no-run-next")
 
         code = run_command(cmd)

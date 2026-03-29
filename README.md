@@ -116,6 +116,9 @@ python3 scripts/requirement-debate/commitment_debate.py \
   --run-next
 ```
 
+commitment 결과를 하나가 아니라 여러 workforce에 동시에 전달하고 싶다면 `--run-fanout`을 사용합니다.
+예를 들어 `ux`, `operator`, `core`, `society`에 같은 topic을 동시에 던질 수 있습니다.
+
 ### 3-1. Run in semi-autonomous mode
 
 ```bash
@@ -154,6 +157,8 @@ python3 scripts/pipeline/loop_workflow.py \
 - 반복될 때마다 issue를 자동 생성/승인
 - 결과: service-first, UX-first topic catalog slice를 진행하면서 각 slice마다 하나의 issue를 발급
 
+fanout 모드로 commitment topic을 여러 workforce에 동시에 던지려면 `run_studio.py` 또는 `debate.py`에 `--run-fanout`을 사용합니다.
+
 **상세 제어 (Custom):**
 
 ```bash
@@ -174,6 +179,7 @@ python3 scripts/pipeline/loop_workflow.py \
 - `--stop-on-created-issue`를 주면 새 issue가 실제로 생성됐을 때만 루프를 멈춥니다.
 - `--stop-on-issue`를 주면 issue 생성 또는 재사용 후 루프를 멈춥니다.
 - `--stop-on-duplicate`를 주면 continuation comment/duplicate 경로가 나왔을 때 루프를 멈춥니다.
+- `--run-fanout`을 주면 commitment가 고른 topic을 여러 workforce에 동시에 전달합니다.
 
 **사용 가능한 Profiles:**
 

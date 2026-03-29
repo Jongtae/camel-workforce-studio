@@ -1599,6 +1599,10 @@ def unique_nonempty(items: list[str]) -> list[str]:
     return result
 
 
+def default_fanout_workforces() -> list[str]:
+    return [key for key in ["ux", "operator", "core", "society"] if key in SCENARIOS]
+
+
 def rotate_assignee(task_assignees: list[str], index: int) -> str:
     if not task_assignees:
         return ""
@@ -2390,6 +2394,8 @@ def run_workforce(
     context_pack_path: Optional[str] = None,
     share_memory: bool = False,
     auto_run_next: bool = False,
+    auto_run_fanout: bool = False,
+    fanout_workforces: Optional[list[str]] = None,
 ):
     """선택한 Workforce를 실행하고 결과 텍스트와 저장 경로를 반환합니다."""
     if workforce_key not in SCENARIOS:
@@ -2574,6 +2580,7 @@ def run_workforce(
                 print(f"  - {reason}")
 
     next_run = None
+    fanout_runs: list[dict] = []
     if auto_run_next:
         if workforce_key != "commitment":
             print("  ⚠ --run-next는 commitment workforce에서만 지원됩니다.")
@@ -2603,7 +2610,51 @@ def run_workforce(
                 context_pack_path=context_pack_path,
                 share_memory=share_memory,
                 auto_run_next=False,
+                auto_run_fanout=False,
             )
+    if auto_run_fanout:
+        if workforce_key != "commitment":
+            print("  ⚠ --run-fanout는 commitment workforce에서만 지원됩니다.")
+        elif not next_topic:
+            print("  ⚠ commitment 결과에서 fanout할 topic을 추출하지 못했습니다.")
+        else:
+            fanout_targets = [
+                item.strip()
+                for item in (fanout_workforces or default_fanout_workforces())
+                if item.strip() and item.strip() != "commitment"
+            ]
+            print()
+            print("📣 commitment 결과를 여러 workforce로 동시에 전달합니다...")
+            print(f"  - Fanout target topic: {next_topic}")
+            print(f"  - Fanout workforces: {', '.join(fanout_targets) if fanout_targets else '(none)'}")
+            for fanout_workforce in fanout_targets:
+                print()
+                print(f"➡️ fanout 실행: {fanout_workforce}")
+                fanout_runs.append(
+                    run_workforce(
+                        workforce_key=fanout_workforce,
+                        topic=next_topic,
+                        model_name=model_name,
+                        rounds=rounds,
+                        create_issue=create_issue,
+                        approve_issue=approve_issue,
+                        issue_repo=issue_repo,
+                        issue_type=issue_type,
+                        issue_labels=issue_labels,
+                        issue_assignees=issue_assignees,
+                        task_assignees=task_assignees,
+                        issue_milestone=issue_milestone,
+                        issue_project=issue_project,
+                        epic_label=epic_label,
+                        with_sprint=with_sprint,
+                        max_child_issues=max_child_issues,
+                        handoff_path=str(artifacts.handoff),
+                        context_pack_path=context_pack_path,
+                        share_memory=share_memory,
+                        auto_run_next=False,
+                        auto_run_fanout=False,
+                    )
+                )
 
     print()
     print("✅ 토론 완료!")
@@ -2618,6 +2669,7 @@ def run_workforce(
         "next_workforce": target_workforce,
         "next_topic": next_topic,
         "next_run": next_run,
+        "fanout_runs": fanout_runs,
     }
 
 
@@ -2743,6 +2795,17 @@ def main(argv=None):
         action="store_true",
         help="commitment workforce 결과를 바로 다음 workforce 실행으로 연결",
     )
+    parser.add_argument(
+        "--run-fanout",
+        action="store_true",
+        help="commitment workforce 결과를 여러 workforce에 동시에 전달",
+    )
+    parser.add_argument(
+        "--fanout-workforce",
+        action="append",
+        default=[],
+        help="fanout 대상 workforce (여러 번 지정 가능, 기본: ux/operator/core/society)",
+    )
     args = parser.parse_args(argv)
     if args.rounds < 1:
         parser.error("--rounds must be at least 1")
@@ -2769,6 +2832,8 @@ def main(argv=None):
         context_pack_path=args.context_pack,
         share_memory=args.share_memory,
         auto_run_next=args.run_next,
+        auto_run_fanout=args.run_fanout,
+        fanout_workforces=args.fanout_workforce,
     )
 
 

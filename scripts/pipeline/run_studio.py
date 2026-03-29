@@ -105,6 +105,17 @@ def main() -> None:
         help="Run only commitment without chaining to the selected next workforce",
     )
     parser.add_argument(
+        "--run-fanout",
+        action="store_true",
+        help="commitment 결과를 여러 workforce에 동시에 전달",
+    )
+    parser.add_argument(
+        "--fanout-workforce",
+        action="append",
+        default=[],
+        help="fanout 대상 workforce (여러 번 지정 가능)",
+    )
+    parser.add_argument(
         "--create-issue",
         action="store_true",
         help="선택된 workforce 결과가 issue-ready면 issue draft를 준비",
@@ -215,7 +226,11 @@ def main() -> None:
     ]
     if handoff_path:
         commitment_cmd.extend(["--handoff", handoff_path])
-    if not args.no_run_next:
+    if args.run_fanout:
+        commitment_cmd.append("--run-fanout")
+        for fanout_workforce in args.fanout_workforce:
+            commitment_cmd.extend(["--fanout-workforce", fanout_workforce])
+    elif not args.no_run_next:
         commitment_cmd.append("--run-next")
     if args.create_issue:
         commitment_cmd.extend(["--create-issue", "--issue-repo", args.repo, "--issue-type", args.issue_type])
