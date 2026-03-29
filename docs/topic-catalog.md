@@ -7,42 +7,49 @@
 
 이 섹션은 운영 도구가 만들다 만 것처럼 보이지 않도록, operator hub의 첫인상과 연결 구조를 먼저 닫기 위한 slice들이다. 여기서는 시뮬레이션보다 운영 도구의 완성도가 우선이다.
 
-### TC-1. Replay viewer state restore minimum
+### TC-1. Replay viewer last viewed anchor persistence minimum
+- Issue Topic: Replay viewer last viewed anchor persistence minimum
+- Goal: replay viewer가 마지막으로 본 run, 패널, 스크롤 anchor를 기억하고 다시 열릴 때 같은 지점으로 복원한다.
+- Preferred Workforce: operator
+- Why now: 운영자는 replay를 이어서 봐야 할 때가 많아서, 가장 작은 복원 단위부터 닫아야 맥락이 끊기지 않는다.
+- Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화, 전체 재생 경험 재설계
+
+### TC-2. Replay viewer state restore minimum
 - Issue Topic: Replay viewer state restore minimum
 - Goal: replay viewer가 마지막으로 본 run과 위치를 기억하고 다시 열릴 때 같은 상태를 복원한다.
 - Preferred Workforce: operator
 - Why now: 운영자는 replay를 이어서 봐야 할 때가 많아서, 상태 복원이 안 되면 맥락이 끊긴다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
-### TC-2. Sprint summary linkage minimum
+### TC-3. Sprint summary linkage minimum
 - Issue Topic: Sprint summary linkage minimum
 - Goal: Sprint 1 요약이 replay viewer와 서로 왕복 이동 가능한 링크 구조를 갖게 한다.
 - Preferred Workforce: operator
 - Why now: 요약과 replay가 분리되면 운영자는 실제 근거를 빠르게 확인할 수 없다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
-### TC-3. Replay viewer continuity minimum
+### TC-4. Replay viewer continuity minimum
 - Issue Topic: Replay viewer continuity minimum
 - Goal: 최신 run replay의 연속성, 재생 흐름, 이전/다음 run 연결을 매끄럽게 만든다.
 - Preferred Workforce: operator
 - Why now: replay 흐름이 끊기면 운영자는 어느 구간이 바뀌었는지 빠르게 파악할 수 없기 때문이다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
-### TC-4. Sprint summary and replay viewer continuity minimum
+### TC-5. Sprint summary and replay viewer continuity minimum
 - Issue Topic: Sprint summary and replay viewer continuity minimum
 - Goal: Sprint 1 요약, replay viewer, 평가 지표가 한 흐름으로 이어지게 한다.
 - Preferred Workforce: operator
 - Why now: 운영 도구의 핵심 정보가 분절되면 아직 완성되지 않은 인상을 주기 때문이다.
 - Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
 
-### TC-5. Operator hub landing and navigation coherence minimum
+### TC-6. Operator hub landing and navigation coherence minimum
 - Issue Topic: Operator hub landing and navigation coherence minimum
 - Goal: 운영 도구 허브의 첫 화면, 카드 배치, 섹션 전환, 현재 위치 표시를 정리한다.
 - Preferred Workforce: operator
 - Why now: 운영 도구의 핵심 정보가 이미 있더라도, 첫 화면이 조각나 보이면 전체 허브 신뢰가 깨지기 때문이다.
 - Excludes: 고급 분석, 정책 실험 플랫폼, 시뮬레이션 고도화
 
-### TC-6. Metric card and empty state completeness minimum
+### TC-7. Metric card and empty state completeness minimum
 - Issue Topic: Metric card and empty state completeness minimum
 - Goal: metric 카드와 빈 상태를 일관된 메시지와 레이아웃으로 채운다.
 - Preferred Workforce: core

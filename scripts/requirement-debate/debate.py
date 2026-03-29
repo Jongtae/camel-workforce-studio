@@ -497,6 +497,7 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
     if operator_hub_guidance:
         if any(phrase in guidance_text for phrase in ["state restore", "state 복원"]):
             operator_hub_priority = [
+                "Replay viewer last viewed anchor persistence minimum",
                 "Replay viewer state restore minimum",
                 "Sprint summary linkage minimum",
                 "Replay viewer continuity minimum",
@@ -507,6 +508,7 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
         elif any(phrase in guidance_text for phrase in ["linkage", "링크"]):
             operator_hub_priority = [
                 "Sprint summary linkage minimum",
+                "Replay viewer last viewed anchor persistence minimum",
                 "Replay viewer state restore minimum",
                 "Replay viewer continuity minimum",
                 "Sprint summary and replay viewer continuity minimum",
@@ -1691,7 +1693,7 @@ def resolve_existing_issue(
     best_overlap = 0
     for existing in issue_index.values():
         title_score, overlap_count = issue_match_score(title, body, existing)
-        if title_score >= 0.8 or overlap_count >= 5:
+        if title_score >= 0.88 or overlap_count >= 7:
             if title_score > best_score or (title_score == best_score and overlap_count > best_overlap):
                 best_match = existing
                 best_score = title_score
