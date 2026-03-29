@@ -78,9 +78,27 @@ def should_stop(
     return False
 
 
+def preset_mvp_v1() -> dict:
+    """Preset: MVP v1 - Stop when a new issue is created (default workflow for topic catalog slice progression)"""
+    return {
+        "iterations": 1,
+        "sleep_seconds": 0,
+        "stop_on_created_issue": True,
+        "create_issue": True,
+        "approve_issue": True,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Repeat run_studio.py, inspect each iteration, and continue to the next round."
+    )
+    parser.add_argument(
+        "--profile",
+        type=str,
+        choices=["mvp-v1"],
+        default=None,
+        help="Use a preset profile (mvp-v1: create issues until one succeeds, then stop)",
     )
     parser.add_argument("--iterations", type=int, default=1, help="How many iterations to run")
     parser.add_argument("--sleep-seconds", type=int, default=0, help="Pause between iterations")
@@ -131,6 +149,20 @@ def main() -> None:
     parser.add_argument("--handoff", type=str, default=None)
     parser.add_argument("--no-run-next", action="store_true")
     args = parser.parse_args()
+
+    # Apply profile if specified
+    if args.profile == "mvp-v1":
+        preset = preset_mvp_v1()
+        # Override defaults with preset values (unless explicitly provided)
+        if not any(
+            arg in sys.argv for arg in ["--iterations", "--stop-on-created-issue", "--create-issue", "--approve-issue"]
+        ):
+            args.iterations = preset.get("iterations", args.iterations)
+            args.sleep_seconds = preset.get("sleep_seconds", args.sleep_seconds)
+            args.stop_on_created_issue = preset.get("stop_on_created_issue", args.stop_on_created_issue)
+            args.create_issue = preset.get("create_issue", args.create_issue)
+            args.approve_issue = preset.get("approve_issue", args.approve_issue)
+            print(f"✓ Using mvp-v1 preset: create issues until one succeeds, then stop")
 
     for index in range(1, args.iterations + 1):
         print("\n" + "=" * 72)

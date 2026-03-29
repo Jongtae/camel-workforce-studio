@@ -134,6 +134,22 @@ python3 scripts/pipeline/run_studio.py \
 
 ### 3-1-1. Repeat the loop with status checks
 
+**MVP v1 preset (권장):**
+
+```bash
+python3 scripts/pipeline/loop_workflow.py \
+  --profile mvp-v1 \
+  --repo Jongtae/AI-Fashion-Forum \
+  --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum
+```
+
+`--profile mvp-v1`은 아래와 같이 자동 설정됩니다:
+- 새 issue가 생성될 때까지만 반복
+- 반복될 때마다 issue를 자동 생성/승인
+- 결과: topic catalog slice를 진행하면서 각 slice마다 하나의 issue를 발급
+
+**상세 제어 (Custom):**
+
 ```bash
 python3 scripts/pipeline/loop_workflow.py \
   --iterations 3 \
@@ -152,6 +168,10 @@ python3 scripts/pipeline/loop_workflow.py \
 - `--stop-on-created-issue`를 주면 새 issue가 실제로 생성됐을 때만 루프를 멈춥니다.
 - `--stop-on-issue`를 주면 issue 생성 또는 재사용 후 루프를 멈춥니다.
 - `--stop-on-duplicate`를 주면 continuation comment/duplicate 경로가 나왔을 때 루프를 멈춥니다.
+
+**사용 가능한 Profiles:**
+
+- `mvp-v1`: Topic catalog slice를 진행하면서 새 issue 생성할 때까지 루프 (기본 workflow)
 
 ### 3-2. Run and issue AI-Fashion-Forum issues
 
@@ -297,6 +317,8 @@ GitHub wiki 대신 레포 안 문서에 운영 지식을 남깁니다.
 에이전트 작업 가이드를 바꾸는 변경이 있으면 아래 파일을 함께 갱신합니다.
 
 - `agent.md`
+- `CLAUDE.md`
+- `README.md`
 - `CLAUDE.md`
 
 두 파일은 항상 같은 운영 기준을 반영해야 합니다.
