@@ -1506,7 +1506,7 @@ def issue_labels_for_type(
     extra_labels: Optional[list[str]] = None,
     epic_label: Optional[str] = None,
 ) -> list[str]:
-    labels = ["enhancement", "project:mvp-v1"]
+    labels = ["enhancement", "project:catalog-loop"]
     if issue_type == "epic":
         labels.append("type:epic")
     if epic_label:

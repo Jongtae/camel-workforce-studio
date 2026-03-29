@@ -78,8 +78,8 @@ def should_stop(
     return False
 
 
-def preset_mvp_v1() -> dict:
-    """Preset: MVP v1 - Stop when a new issue is created (default workflow for topic catalog slice progression)"""
+def preset_catalog_loop() -> dict:
+    """Preset: Catalog loop - Stop when a new issue is created (default workflow for topic catalog slice progression)"""
     return {
         "iterations": 1,
         "sleep_seconds": 0,
@@ -96,9 +96,9 @@ def main() -> None:
     parser.add_argument(
         "--profile",
         type=str,
-        choices=["mvp-v1"],
+        choices=["catalog-loop"],
         default=None,
-        help="Use a preset profile (mvp-v1: create issues until one succeeds, then stop)",
+        help="Use a preset profile (catalog-loop: create issues until one succeeds, then stop)",
     )
     parser.add_argument("--iterations", type=int, default=1, help="How many iterations to run")
     parser.add_argument("--sleep-seconds", type=int, default=0, help="Pause between iterations")
@@ -151,8 +151,8 @@ def main() -> None:
     args = parser.parse_args()
 
     # Apply profile if specified
-    if args.profile == "mvp-v1":
-        preset = preset_mvp_v1()
+    if args.profile == "catalog-loop":
+        preset = preset_catalog_loop()
         # Override defaults with preset values (unless explicitly provided)
         if not any(
             arg in sys.argv for arg in ["--iterations", "--stop-on-created-issue", "--create-issue", "--approve-issue"]
@@ -162,7 +162,7 @@ def main() -> None:
             args.stop_on_created_issue = preset.get("stop_on_created_issue", args.stop_on_created_issue)
             args.create_issue = preset.get("create_issue", args.create_issue)
             args.approve_issue = preset.get("approve_issue", args.approve_issue)
-            print(f"✓ Using mvp-v1 preset: create issues until one succeeds, then stop")
+            print("✓ Using catalog-loop preset: create issues until one succeeds, then stop")
 
     for index in range(1, args.iterations + 1):
         print("\n" + "=" * 72)

@@ -134,16 +134,16 @@ python3 scripts/pipeline/run_studio.py \
 
 ### 3-1-1. Repeat the loop with status checks
 
-**MVP v1 preset (권장):**
+**Catalog loop preset (권장):**
 
 ```bash
 python3 scripts/pipeline/loop_workflow.py \
-  --profile mvp-v1 \
+  --profile catalog-loop \
   --repo Jongtae/AI-Fashion-Forum \
   --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum
 ```
 
-`--profile mvp-v1`은 아래와 같이 자동 설정됩니다:
+`--profile catalog-loop`는 아래와 같이 자동 설정됩니다:
 - 새 issue가 생성될 때까지만 반복
 - 반복될 때마다 issue를 자동 생성/승인
 - 결과: topic catalog slice를 진행하면서 각 slice마다 하나의 issue를 발급
@@ -171,7 +171,7 @@ python3 scripts/pipeline/loop_workflow.py \
 
 **사용 가능한 Profiles:**
 
-- `mvp-v1`: Topic catalog slice를 진행하면서 새 issue 생성할 때까지 루프 (기본 workflow)
+- `catalog-loop`: Topic catalog slice를 진행하면서 새 issue 생성할 때까지 루프 (기본 workflow)
 
 ### 3-2. Run and issue AI-Fashion-Forum issues
 

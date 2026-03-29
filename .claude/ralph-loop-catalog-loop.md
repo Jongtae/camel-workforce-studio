@@ -1,6 +1,6 @@
-# Ralph Loop: MVP v1 Topic Catalog Progression (Iterations=3)
+# Ralph Loop: Catalog Loop Topic Progression (Iterations=3)
 
-Execute the MVP v1 workflow to progress through topic catalog slices.
+Execute the catalog-loop workflow to progress through topic catalog slices.
 Maximum 3 iterations - each iteration creates one new GitHub issue, then stops.
 
 ## Setup
@@ -13,7 +13,7 @@ source .venv/bin/activate
 
 ```bash
 python scripts/pipeline/loop_workflow.py \
-  --profile mvp-v1 \
+  --profile catalog-loop \
   --repo Jongtae/AI-Fashion-Forum \
   --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum
 ```
@@ -21,7 +21,7 @@ python scripts/pipeline/loop_workflow.py \
 ## Loop Parameters
 
 - **iterations**: 1 (preset, creates one issue per loop invocation)
-- **profile**: mvp-v1 (auto: --stop-on-created-issue, --create-issue, --approve-issue)
+- **profile**: catalog-loop (auto: --stop-on-created-issue, --create-issue, --approve-issue)
 - **total ralph-loop iterations**: 3 (will run up to 3 times)
 
 ## Each Iteration
@@ -41,9 +41,9 @@ python scripts/pipeline/loop_workflow.py \
 
 ## Expected Flow
 
-- **Iteration 1**: TC-1 or next available slice → Issue created
-- **Iteration 2**: Next uncovered slice → Issue created
-- **Iteration 3**: Continues if slices remain → Issue created
+- **Iteration 1**: first available slice → Issue created
+- **Iteration 2**: next uncovered slice → Issue created
+- **Iteration 3**: continues if slices remain → Issue created
 
 If topic catalog exhausted before iteration 3, loop terminates naturally.
 
