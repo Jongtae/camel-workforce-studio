@@ -3,6 +3,32 @@
 이 카탈로그는 `commitment`가 새 topic을 자유 창작하지 않고, 지금 단계에서 바로 issue-ready로 발급 가능한 가장 작은 slice만 선택하도록 돕기 위한 운영 기준이다.
 핵심 원칙은 **서비스 완성도를 먼저 닫고, 그 다음에 시뮬레이션이나 고도화를 논의하는 것**이다. 따라서 이 카탈로그는 실제로 쓸 수 있는 포럼 서비스 slice를 먼저 닫는 데 집중하고, 시뮬레이션, 불쾌감 감지, 고급 행동 해석은 서비스가 닫힌 뒤에만 다룬다.
 
+## Operator Hub Completion Slices
+
+이 섹션은 운영 도구가 만들다 만 것처럼 보이지 않도록, operator hub의 첫인상과 연결 구조를 먼저 닫기 위한 slice들이다. 여기서는 시뮬레이션보다 운영 도구의 완성도가 우선이다.
+
+### TC-1. Operator hub landing and navigation coherence minimum
+- Issue Topic: Operator hub landing and navigation coherence minimum
+- Goal: 운영 도구 허브의 첫 화면, 카드 배치, 섹션 전환, 현재 위치 표시를 정리한다.
+- Preferred Workforce: operator
+- Why now: 운영 도구가 아직 조각나 보이면 사용자가 시스템을 신뢰하기 어렵기 때문이다.
+- Excludes: 고급 분석, 정책 실험 플랫폼, 시뮬레이션 고도화
+
+### TC-2. Sprint summary and replay viewer continuity minimum
+- Issue Topic: Sprint summary and replay viewer continuity minimum
+- Goal: Sprint 1 요약, replay viewer, 평가 지표가 한 흐름으로 이어지게 한다.
+- Preferred Workforce: operator
+- Why now: 운영 도구의 핵심 정보가 분절되면 아직 완성되지 않은 인상을 주기 때문이다.
+- Excludes: 복잡한 차트 시스템, 상세 인사이트 엔진, 행동 해석 고도화
+
+### TC-3. Metric card and empty state completeness minimum
+- Issue Topic: Metric card and empty state completeness minimum
+- Goal: metric 카드와 빈 상태를 일관된 메시지와 레이아웃으로 채운다.
+- Preferred Workforce: core
+- Why now: 비어 보이는 카드와 어색한 빈 상태가 만들다 만 느낌을 가장 강하게 주기 때문이다.
+- Excludes: 전체 대시보드 재설계, 추천 고도화, advanced visualization
+
+
 ## Forum Service UX Slices
 
 이 섹션은 threads, Twitter-like reply UX, compact composer, tag navigation처럼 사용자가 실제로 쓰고 싶어지는 포럼 서비스 경험을 먼저 닫기 위한 slice들이다. 여기서 중요한 것은 시뮬레이션이 아니라 서비스 완성도다.

@@ -476,6 +476,32 @@ def choose_catalog_topic(topic: str, workforce: str, context_pack_text: str) -> 
 
     open_issue_titles = parse_active_issue_titles_from_context(context_pack_text)
     guidance_text = context_pack_text.lower()
+    operator_hub_guidance = any(
+        phrase in guidance_text
+        for phrase in [
+            "operator hub",
+            "운영 도구 허브",
+            "admin surface",
+            "replay viewer",
+            "sprint summary",
+            "빈 상태",
+            "empty state",
+            "카드 배치",
+        ]
+    )
+    if operator_hub_guidance:
+        operator_hub_priority = [
+            "Operator hub landing and navigation coherence minimum",
+            "Sprint summary and replay viewer continuity minimum",
+            "Metric card and empty state completeness minimum",
+            "Minimal operator visibility API",
+        ]
+        for preferred_topic in operator_hub_priority:
+            for item in items:
+                issue_topic = item.get("issue_topic", "").strip()
+                if normalize_topic_text(issue_topic) == normalize_topic_text(preferred_topic):
+                    return issue_topic
+
     if any(
         phrase in guidance_text
         for phrase in [
