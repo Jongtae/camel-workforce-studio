@@ -39,7 +39,7 @@ WORKFLOW_OBJECTIVES = {
     "society": "API 기반 forum 위에서 action하는 stateful AI agent의 상태, 기억, characteristic, 내부/외부 콘텐츠 소비 규칙을 정리한다.",
 }
 
-DEFAULT_SOFT_GUIDANCE = "처음 시도로는 초기 운영 가능한 시스템 완성을 목표로 한다. 고도화 주제보다 지금 바로 검증 가능한 최소 운영 slice를 우선한다."
+DEFAULT_SOFT_GUIDANCE = "처음 시도로는 서비스 완성도를 먼저 닫는 것을 최우선으로 한다. threads와 Twitter 같은 잘 설계된 포럼 UX를 참고하되, 사용자가 실제로 쓰고 싶어지는 초기 운영 가능한 forum service slice를 먼저 완성한다. thread continuity, reply context, compact compose entrypoint, tag navigation, feed clarity처럼 바로 체감되는 최소 UX와 기본 서비스 루프를 우선하고, 시뮬레이션 고도화, 불쾌감 감지, 행동 해석, 고급 분석은 서비스가 먼저 닫힌 뒤에만 논의한다."
 DEFAULT_TOPIC_CATALOG_PATH = ROOT_DIR / "docs" / "topic-catalog.md"
 
 

@@ -117,7 +117,7 @@ python3 scripts/pipeline/run_studio.py \
   --repo Jongtae/AI-Fashion-Forum \
   --source-dir /Users/jongtaelee/Documents/AI-Fashion-Forum \
   --sim-results-dir /Users/jongtaelee/Documents/AI-Fashion-Forum/path/to/sim-results \
-  --soft-guidance "처음 시도로는 초기 운영 가능한 시스템 완성을 목표로 한다." \
+  --soft-guidance "threads와 Twitter 같은 좋은 포럼 UX를 참고해, thread continuity, reply context, compact compose entrypoint, tag navigation처럼 사용자가 실제로 쓰고 싶어지는 forum service slice를 우선한다." \
   --rounds 1
 ```
 
@@ -146,7 +146,7 @@ python3 scripts/pipeline/loop_workflow.py \
 `--profile catalog-loop`는 아래와 같이 자동 설정됩니다:
 - 새 issue가 생성될 때까지만 반복
 - 반복될 때마다 issue를 자동 생성/승인
-- 결과: topic catalog slice를 진행하면서 각 slice마다 하나의 issue를 발급
+- 결과: service-first topic catalog slice를 진행하면서 각 slice마다 하나의 issue를 발급
 
 **상세 제어 (Custom):**
 
@@ -171,7 +171,7 @@ python3 scripts/pipeline/loop_workflow.py \
 
 **사용 가능한 Profiles:**
 
-- `catalog-loop`: Topic catalog slice를 진행하면서 새 issue 생성할 때까지 루프 (기본 workflow)
+- `catalog-loop`: 서비스 완성도를 먼저 닫는 topic catalog slice를 진행하면서 새 issue 생성할 때까지 루프 (기본 workflow)
 
 ### 3-2. Run and issue AI-Fashion-Forum issues
 

@@ -1,6 +1,39 @@
 # Topic Catalog
 
 이 카탈로그는 `commitment`가 새 topic을 자유 창작하지 않고, 지금 단계에서 바로 issue-ready로 발급 가능한 가장 작은 slice만 선택하도록 돕기 위한 운영 기준이다.
+핵심 원칙은 **서비스 완성도를 먼저 닫고, 그 다음에 시뮬레이션이나 고도화를 논의하는 것**이다. 따라서 이 카탈로그는 실제로 쓸 수 있는 포럼 서비스 slice를 먼저 닫는 데 집중하고, 시뮬레이션, 불쾌감 감지, 고급 행동 해석은 서비스가 닫힌 뒤에만 다룬다.
+
+## Forum Service UX Slices
+
+이 섹션은 threads, Twitter-like reply UX, compact composer, tag navigation처럼 사용자가 실제로 쓰고 싶어지는 포럼 서비스 경험을 먼저 닫기 위한 slice들이다. 여기서 중요한 것은 시뮬레이션이 아니라 서비스 완성도다.
+
+### TC-1. Threaded reply and comment context minimum
+- Issue Topic: Threaded reply and comment context minimum
+- Goal: 댓글이 게시글뿐 아니라 다른 댓글에도 자연스럽게 응답할 수 있도록 thread context를 닫는다.
+- Preferred Workforce: core
+- Why now: threads 스타일의 대화 연속성이 포럼 UX의 가장 기본적인 품질이기 때문이다.
+- Excludes: 감정 해석, 불쾌감 감지, 고도화된 토론 분석
+
+### TC-2. Compact compose entrypoint minimum
+- Issue Topic: Compact compose entrypoint minimum
+- Goal: 상단 composer 대신 더 가볍고 맥락적인 글쓰기 진입점을 만든다.
+- Preferred Workforce: core
+- Why now: Twitter-like compose 흐름처럼 사용자의 글쓰기 마찰을 낮추는 첫 화면 개선이 필요하기 때문이다.
+- Excludes: 전체 작성 플로우 개편, 고급 편집기, 추천 고도화
+
+### TC-3. Tag navigation and hashtag search minimum
+- Issue Topic: Tag navigation and hashtag search minimum
+- Goal: 해시태그와 태그 링크가 검색/필터 결과로 자연스럽게 연결되도록 한다.
+- Preferred Workforce: core
+- Why now: 포럼 발견성과 탐색성은 thread와 tag navigation에서 가장 빨리 체감되기 때문이다.
+- Excludes: 복잡한 추천 시스템, 개인화 랭킹, 고급 분석
+
+### TC-4. Reply-driven agent comment generation minimum
+- Issue Topic: Reply-driven agent comment generation minimum
+- Goal: agent comment가 parent post 또는 sibling comment 문맥에 반응하도록 한다.
+- Preferred Workforce: society
+- Why now: thread 맥락에 반응하는 댓글은 forum service의 conversational quality를 가장 직접적으로 드러내기 때문이다.
+- Excludes: 불쾌감 감지, 감정 해석, 고도화된 사회 행동 해석
 
 ## Post-CRUD Follow-up Slice
 
@@ -52,4 +85,5 @@
 
 - commitment는 새 topic을 invent하지 말고 위 항목 중 하나만 고른다.
 - 가장 넓은 질문보다 지금 바로 issue-ready한 가장 작은 slice를 우선한다.
+- 서비스가 아직 덜 닫혔다면 시뮬레이션, 불쾌감 감지, 행동 해석 같은 고도화 토픽은 고르지 않는다.
 - 불쾌감 감지, 감정 해석, 고도화된 사회 행동 해석은 이 카탈로그의 범위를 벗어나면 다음 epic 또는 later slice로 넘긴다.
